@@ -2,23 +2,22 @@
     position: relative;
     overflow-y: scroll;
     overflow-x: hidden;
-    padding: 40px 16px 10px 16px;
+    padding: 40px 12px 10px 16px;
     height: 100%;
 }
 
-    /*¹ö¶¯ÌõÑùÊ½*/
-    .message-scroll-section::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
+/*æ»šåŠ¨æ¡æ ·å¼*/
+.message-scroll-section::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
 
-    .message-scroll-section::-webkit-scrollbar-thumb {
-        border-radius: 4px;
-        background: rgba(0,0,0,0.2);
-    }
+.message-scroll-section::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+    background: rgba(128, 128, 128, 0.5);
+}
 
-    .message-scroll-section::-webkit-scrollbar-track {
-        border-radius: 4px;
-        margin:4px;
-        background: rgba(0,0,0,0.1);
-    }
+.message-scroll-section::-webkit-scrollbar-track {
+    margin: 4px;
+    background: transparent;
+}
