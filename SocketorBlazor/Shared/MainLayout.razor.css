@@ -1,0 +1,16 @@
+.main-layout{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    position: absolute;
+}
+
+.sidebar{
+    width: 140px;
+    height: 100%;
+}
+.content-layout{
+    flex: 1;
+    height: 100%;
+    width: 100%;
+}

@@ -1,0 +1,121 @@
+* {
+    margin: 0;
+    padding: 0;
+    color: var(--text-main);
+}
+
+:root {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+    background-color: var(--background-main);
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    background-color: var(--background-main);
+}
+
+a {
+    font-weight: 500;
+    color: var(--primary);
+    text-decoration: inherit;
+}
+
+a:hover {
+    color: var(--primary-focused);
+}
+
+/*填充父对象*/
+.ax-fill, .ax-section {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.ax-section {
+    border-radius: 8px;
+    border: 1px solid var(--border-section);
+    margin: 4px;
+    background-color: var(--background-section);
+    color: var(--text-main);
+}
+
+.ax-card{
+    border-radius: 4px;
+    box-shadow: 3px 3px 8px var(--shader-shadow);
+    
+    
+    border: 1px solid transparent;
+    background-clip: padding-box, border-box;
+    background-origin: padding-box, border-box;
+    background-image: linear-gradient(to right, var(--background-main), var(--background-main)),
+    var(--border-lighted);
+}
+
+/*按钮与输入 尺寸 布局 字体*/
+.ax-button, button, input, textarea {
+    transition: all 0.2s ease-out;
+    outline: none;
+
+    border-radius: 4px;
+    border: 1px solid;
+    padding: 6px 16px;
+    margin: 4px;
+
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text-main);
+}
+
+.ax-button, button {
+    background-color: var(--background-button);
+    border-color: var(--border-main);
+
+    font-weight: 500;
+    text-align: center;
+    -webkit-user-select: none;
+    user-select: none;
+
+    display: inline-block;
+    /*position: absolute;*/
+
+    cursor: pointer;
+}
+
+/*按钮高亮*/
+.ax-button:hover, button:hover {
+    border-color: transparent;
+    background-clip: padding-box, border-box;
+    background-origin: padding-box, border-box;
+    background-image: linear-gradient(to right, var(--background-button), var(--background-button)),
+    var(--border-lighted);
+    box-shadow: -3px -3px 8px var(--shader-light), 3px 3px 8px var(--shader-shadow);
+    transform: scale(1.01, 1.01);
+}
+
+/*按钮按下*/
+.ax-button:active, button:active {
+    transition: none;
+    box-shadow: -2px -2px 6px var(--shader-light), 2px 2px 6px var(--shader-shadow);
+    transform: scale(0.99, 0.99);
+}
+
+input, textarea {
+    background-color: var(--background-textfield);
+    border-width: 0;
+    padding: 6px 12px;
+    box-shadow: inset -2px -2px 3px var(--shader-light), inset 2px 2px 3px var(--shader-shadow);
+    font-weight: 450;
+    resize: none;
+}
+

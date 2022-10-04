@@ -1,0 +1,27 @@
+.workspace-area{
+    display: flex;
+    height: 100%;
+}
+.center-area{
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    height: 100%;
+}
+.right-area{
+    width: 240px;
+    display: flex;
+    position: relative;
+    margin: 4px 4px 4px 0;
+}
+.message-area{
+    flex-grow: 1;
+    height: 100%;
+    position: relative;
+    margin-left: 4px;
+    margin-top: 4px;
+}
+.sender-area{
+    height: 180px;
+    position: relative;
+}

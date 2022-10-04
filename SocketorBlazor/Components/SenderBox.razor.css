@@ -1,0 +1,57 @@
+.sender-box-main {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    margin-left: 4px;
+    margin-bottom: 4px;
+}
+
+.sender-config {
+    padding-left: 8px;
+    padding-right: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.sender-box {
+    display: flex;
+    flex-grow: 1;
+}
+
+.sender-input {
+    flex-grow: 1;
+}
+
+.sender-button {
+    position: relative;
+    width: 100px;
+    font-size: 20px;
+    font-weight: 440;
+}
+
+/*时间输入框样式*/
+.line-input {
+    background-color: transparent;
+    border-bottom: 1px solid var(--border-main);
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    text-align: center;
+}
+.line-input:focus{
+    border-color: var(--primary);
+}
+.line-input:hover{
+    border-color: var(--primary-focused);
+}
+
+/*移除数字加减按钮*/
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

@@ -1,0 +1,14 @@
+<div class="group-box-section ax-section">
+    <div class="group-title">@Title</div>
+    @ChildContent
+</div>
+
+@code {
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+}

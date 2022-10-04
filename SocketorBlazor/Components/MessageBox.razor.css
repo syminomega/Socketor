@@ -1,0 +1,6 @@
+.message-scroll-section {
+    position: relative;
+    overflow: scroll;
+    padding: 40px 16px 10px 16px;
+    height: 100%;
+}

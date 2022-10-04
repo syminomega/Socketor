@@ -1,0 +1,22 @@
+<div class="workspace-area">
+    <div class="center-area">
+        <div class="message-area">
+            @MessageBoxArea
+        </div>
+        <div class="sender-area">
+            @SenderBoxArea
+        </div>
+    </div>
+    <div class="right-area">
+        @ToolBoxArea
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? SenderBoxArea { get; set; }
+    [Parameter]
+    public RenderFragment? MessageBoxArea { get; set; }
+    [Parameter]
+    public RenderFragment? ToolBoxArea { get; set; }
+}

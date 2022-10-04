@@ -1,0 +1,43 @@
+@using Socketor.DataModel
+@inject IJSRuntime Js
+<GroupBox Title="消息列表">
+    <div class="message-scroll-section">
+        @foreach (var item in MessageItems)
+        {
+            <MessageBoxItem Content="@item.Content" Time="@item.Time" OwnerType="@item.OwnerType"/>
+        }
+        <div @ref="_messageEnd" style="height: 2px"></div>
+    </div>
+</GroupBox>
+
+@code {
+    private ElementReference _messageEnd;
+
+    private List<MessageItemDto> MessageItems { get; set; } = new()
+    {
+        new MessageItemDto("Hello", OwnerType.Log),
+        new MessageItemDto("World", OwnerType.Receive),
+    };
+
+    public void AddItem(string message, OwnerType ownerType)
+    {
+    //超过50条消息时，移除两条
+        if (MessageItems.Count > 50)
+        {
+            MessageItems.RemoveAt(0);
+            MessageItems.RemoveAt(0);
+        }
+    //添加新消息
+        MessageItems.Add(new MessageItemDto(message, ownerType));
+        StateHasChanged();
+
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+    //移动到底部
+        Js.InvokeVoidAsync("socketorUtilities.scrollToTarget", _messageEnd);
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+}

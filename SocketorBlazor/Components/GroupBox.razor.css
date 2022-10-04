@@ -1,0 +1,23 @@
+.group-title {
+    z-index: 1;
+    position: absolute;
+
+    width: 100%;
+    border-radius: 7px 7px 0 0;
+    border-bottom: 1px solid var(--border-main);
+    background-color: var(--background-main-blur);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--text-main);
+
+    font-size: 18px;
+    font-weight: 440;
+    padding: 4px 8px;
+
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+.group-box-section{
+    position: absolute;
+}

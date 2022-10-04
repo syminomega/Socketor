@@ -1,0 +1,79 @@
+:root {
+    /*主题色*/
+    --primary: #2c63f2;
+    --primary-focused: #5593FF;
+    --primary-disabled: #8CAAF8;
+    --primary-light: #bbe5ff;
+    --primary-shadow: #7488b7;
+    /*成功*/
+    --success: #28B82F;
+    /*背景颜色*/
+    --background-main: #E8E9EC;
+    --background-main-blur: rgba(244, 243, 243, 0.5);
+    --background-window: #E8E9EC;
+    --background-focused-mask: #9FA2AC7F;
+    --background-selected-mask: #C8CBD47F;
+    --background-light-mask: #FFFFFF7F;
+    --background-section: #E2E4E7;
+    --background-pure: #FFFFFF;
+
+    --background-button: #F1F2F6;
+    --background-button-disabled: #E8E9EC;
+    --background-textfield: #F1F2F6;
+
+
+    /*文本颜色*/
+    --text-main: #515A6E;
+    --text-main-disabled: #515A6E80;
+    --text-secondary: #BABBBD;
+    --text-contrast: #FFFFFF;
+    --text-contrast-disabled: #FFFFFF80;
+    /*光影颜色*/
+    --shader-light: #F9FAFE;
+    --shader-shadow: #B3B5C1;
+    /*边框颜色*/
+    --border-main: #A6A9BB;
+    --border-section: #A8ABBD;
+    --border-separator-main: #B0B2BD;
+    --border-separator-menu: #CFD1DE;
+
+    --border-lighted: linear-gradient(to bottom right, white 0%, rgb(204, 211, 221, 0.5) 100%)
+}
+
+
+@media (prefers-color-scheme: dark) {
+    :root{
+        /*背景颜色*/
+        --background-main: #2f2f2f;
+        --background-main-blur: rgba(56, 56, 58, 0.5);
+        --background-window: #2f2f2f;
+        /*--background-focused-mask: #9FA2AC7F;*/
+        /*--background-selected-mask: #C8CBD47F;*/
+        /*--background-light-mask: #FFFFFF7F;*/
+        --background-section: #282828;
+        /*--background-pure: #FFFFFF;*/
+        
+        --background-button: #3a3a3a;
+        /*--background-button-disabled: #E8E9EC;*/
+        --background-textfield: #262626;
+
+
+        /*文本颜色*/
+        --text-main: #f6f6f6;
+        /*--text-main-disabled: #515A6E80;*/
+        /*--text-secondary: #BABBBD;*/
+        /*--text-contrast: #FFFFFF;*/
+        /*--text-contrast-disabled: #FFFFFF80;*/
+        /*光影颜色*/
+        --shader-light: #3d3d3d;
+        --shader-shadow: #1c1b1b;
+        /*边框颜色*/
+        --border-main: #505050;
+        --border-section: #404040;
+        --border-separator-main: #4b4d51;
+        /*--border-separator-menu: #CFD1DE;*/
+        
+        --border-lighted: linear-gradient(to bottom right, #525252 0%, #16161780 100%)
+
+    }
+}

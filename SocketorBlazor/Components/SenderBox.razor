@@ -1,0 +1,38 @@
+<div class="ax-fill sender-box-main">
+    <div class="sender-config ax-section">
+        <Check TValue="bool" Checked="_keepContent" CheckedChanged="b => _keepContent = b">发送后保留文本</Check>
+        <Check TValue="bool" Checked="_continuously" CheckedChanged="b => _continuously = b">连续发送</Check>
+        <label>间隔<input @bind="_interval" type="number" class="line-input" style="width: 60px"/>秒</label>
+    </div>
+    <div class="sender-box">
+        <textarea @bind="Content" class="sender-input" placeholder="输入文本消息..."></textarea>
+        <button @onclick="SendMessage" class="sender-button">发送</button>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public Action<string>? OnMessageSend { get; set; }
+
+    private string Content { get; set; } = "";
+    bool _keepContent;
+    bool _continuously;
+    int _interval = 10;
+
+    private void SendMessage()
+    {
+    //不发送空消息
+        if (string.IsNullOrEmpty(Content))
+        {
+            return;
+        }
+        OnMessageSend?.Invoke(Content);
+    //清除消息框
+        if (!_keepContent)
+        {
+            Content = "";
+        }
+    }
+
+}

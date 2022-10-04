@@ -1,0 +1,68 @@
+/*条目整体*/
+.message-item{
+    display: flex;
+    margin: 4px 0;
+    align-content: stretch;
+}
+
+.message-main{
+
+    padding: 4px 8px 2px 8px;
+    
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+
+    flex: 1;
+}
+.message-time{
+    font-size: 14px;
+    margin-bottom: 2px;
+    
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+.message-content{
+    font-size: 16px;
+    white-space: pre-wrap;
+    margin-bottom: 0;
+    
+    -webkit-user-select: auto;
+    user-select: auto;
+    cursor: text;
+    
+}
+
+.time-Send{
+    color: #149119;
+}
+.time-Receive{
+    color: #2978de
+}
+.time-Log{
+    color: #da7a2b
+}
+
+.mark-Send,.mark-Receive{
+    width: 10px;
+    border-radius: 4px;
+    box-shadow: 3px 3px 8px var(--shader-shadow);
+    
+    background-clip: padding-box, border-box;
+    background-origin: padding-box, border-box;
+    border: 1px solid transparent;
+}
+
+.mark-Send{
+    margin-left: 4px;
+    background-image: 
+            linear-gradient(to right, #149119, #149119),
+            linear-gradient(to bottom right, #5ae352 0%, #149119 100%);
+}
+.mark-Receive{
+    margin-right: 4px;
+    background-image: 
+            linear-gradient(to right, #2978de, #2978de),
+            linear-gradient(to bottom right, #429dff 0%, #3b8efa 100%);
+}

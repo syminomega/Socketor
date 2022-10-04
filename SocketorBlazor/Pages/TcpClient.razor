@@ -1,0 +1,35 @@
+﻿@page "/tcp-client"
+@using Socketor.DataModel
+
+<PageTitle>TCP Client</PageTitle>
+
+<WorkspaceLayout>
+    <MessageBoxArea>
+        <MessageBox @ref="_messageBox"/>
+    </MessageBoxArea>
+    <SenderBoxArea>
+        <SenderBox OnMessageSend="SendMessage"/>
+    </SenderBoxArea>
+    <ToolBoxArea>
+        <GroupBox Title="工具设置">
+            <div class="tool-section">
+                <div class="config-title">TCP Server 地址</div>
+                <input class="config-input" placeholder="TCP Server Address"
+                       @bind="ServerAddress"/>
+                <button >连接</button>
+            </div>
+        </GroupBox>
+
+    </ToolBoxArea>
+</WorkspaceLayout>
+
+@code {
+    private string ServerAddress { get; set; } = "localhost:5200";
+    private MessageBox? _messageBox;
+
+    private void SendMessage(string message)
+    {
+        _messageBox?.AddItem(message, OwnerType.Send);
+    }
+
+}
