@@ -1,6 +1,24 @@
 .message-scroll-section {
     position: relative;
-    overflow: scroll;
+    overflow-y: scroll;
+    overflow-x: hidden;
     padding: 40px 16px 10px 16px;
     height: 100%;
 }
+
+    /*滚动条样式*/
+    .message-scroll-section::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .message-scroll-section::-webkit-scrollbar-thumb {
+        border-radius: 4px;
+        background: rgba(0,0,0,0.2);
+    }
+
+    .message-scroll-section::-webkit-scrollbar-track {
+        border-radius: 4px;
+        margin:4px;
+        background: rgba(0,0,0,0.1);
+    }
