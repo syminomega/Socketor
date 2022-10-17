@@ -18,7 +18,8 @@
                 <div class="config-title">Web Socket 地址</div>
                 <input class="config-input" placeholder="WS Address"
                        @bind="WebSocketAddress"/>
-                <button @onclick="Connect">@_connectButtonText</button>
+                <button @onclick="ChangeConnection">@_connectButtonText</button>
+                <button @onclick="ShowState">显示连接状态</button>
             </div>
         </GroupBox>
 
@@ -32,29 +33,28 @@
 
     private void SendMessage(string message)
     {
-        _messageBox?.AddItem(message, OwnerType.Send);
         if (!_connected)
         {
-            _messageBox?.AddItem("未连接到服务器", OwnerType.Log);
+            _messageBox?.AddItem($"[脱机消息] {message}", OwnerType.Send);
             return;
         }
         Memory<byte> buffer = Encoding.UTF8.GetBytes(message);
-    //TODO:解决await
-        _webSocket.SendAsync(buffer, WebSocketMessageType.Text,
-            true, default);
+        var awaiter = _webSocket.SendAsync(buffer, WebSocketMessageType.Text,
+            true, default).GetAwaiter();
+        awaiter.OnCompleted(() => _messageBox?.AddItem(message, OwnerType.Send));
     }
 
     private string _connectButtonText = "连接";
     //切换连接或断开
-    private async Task ChangeConnection()
+    private void ChangeConnection()
     {
         if (_connected)
         {
-            await Disconnect();
+            Disconnect();
         }
         else
         {
-            await Connect();
+            Connect();
         }
     }
 
@@ -62,34 +62,67 @@
     private ClientWebSocket _webSocket = new();
     private bool _connected = false;
     //建立连接
-    private async Task Connect()
+    private void Connect()
     {
         var url = new Uri(WebSocketAddress);
         _webSocket = new ClientWebSocket();
-    //TODO:连接失败
-        await _webSocket.ConnectAsync(url, default);
-        OnOpen();
-        _connected = true;
-        _connectButtonText = "断开连接";
-        await ReceiveMessages();
+        try
+        {
+    //五秒后超时
+            var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var awaiter = _webSocket.ConnectAsync(url, tokenSource.Token).GetAwaiter();
+            awaiter.OnCompleted(AfterConnectAction);
+        }
+        catch (Exception e)
+        {
+            _messageBox?.AddItem($"[连接失败] {e.Message}", OwnerType.Log);
+        }
+    }
+
+    //尝试连接动作完成后
+    private async void AfterConnectAction()
+    {
+    //未进入连接状态
+        if (_webSocket.State != WebSocketState.Open)
+        {
+            _connected = false;
+            _connectButtonText = "连接";
+        }
+        else
+        {
+            _connected = true;
+            _connectButtonText = "断开连接";
+            OnOpen();
+            await BeginReceiveMessage();
+        }
     }
 
     //断开连接
-    private async Task Disconnect()
+    private void Disconnect()
     {
-        await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,
-            "Client Disconnect", CancellationToken.None);
-        _webSocket.Abort();
-        _connected = false;
-        _connectButtonText = "连接";
+        var awaiter = _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,
+            "Client Disconnect", CancellationToken.None).GetAwaiter();
+        awaiter.OnCompleted(() =>
+        {
+            _webSocket.Abort();
+            _connected = false;
+            _connectButtonText = "连接";
+    //OnClose();
+        });
     }
 
     private void OnOpen()
     {
+        _messageBox?.AddItem("连接已开启", OwnerType.Log);
+    //刷新状态按钮显示
+        StateHasChanged();
     }
 
     private void OnClose()
     {
+        _messageBox?.AddItem("连接已关闭", OwnerType.Log);
+    //刷新状态按钮显示
+        StateHasChanged();
     }
 
     private void OnMessage(string message)
@@ -99,7 +132,7 @@
 
 
     //后台接收消息
-    private async Task ReceiveMessages()
+    private async Task BeginReceiveMessage()
     {
         var messageByteBuffer = new List<byte>();
         while (_connected)
@@ -112,8 +145,8 @@
 
             if (socketResult.MessageType == WebSocketMessageType.Close)
             {
-                OnClose();
                 _connected = false;
+                OnClose();
             }
             else
             {
@@ -124,11 +157,10 @@
         }
     }
 
-
+    //显示连接状态
     private void ShowState()
     {
-    //ShowMessage(_webSocket.State.ToString());
+        _messageBox?.AddItem("WebSocket状态:" + _webSocket.State, OwnerType.Log);
     }
-
 
 }

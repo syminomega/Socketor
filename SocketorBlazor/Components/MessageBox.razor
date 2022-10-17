@@ -33,11 +33,11 @@
 
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
     //移动到底部
-        Js.InvokeVoidAsync("socketorUtilities.scrollToTarget", _messageEnd);
-        return base.OnAfterRenderAsync(firstRender);
+        await Js.InvokeVoidAsync("socketorUtilities.scrollToTarget", _messageEnd);
+        await base.OnAfterRenderAsync(firstRender);
     }
 
 }
