@@ -1,7 +1,7 @@
 <div class="ax-fill sender-box-main">
     <div class="sender-config ax-section">
-        <Check TValue="bool" Checked="_keepContent" CheckedChanged="b => _keepContent = b">发送后保留文本</Check>
-        <Check TValue="bool" Checked="_continuously" CheckedChanged="b => _continuously = b">连续发送</Check>
+        <label><input type="checkbox" @bind="_keepContent"/>发送后保留文本</label>
+        <label><input type="checkbox" @bind="_continuously"/>连续发送</label>
         <label>间隔<input @bind="_interval" type="number" class="line-input" style="width: 60px"/>秒</label>
     </div>
     <div class="sender-box">
