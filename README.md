@@ -8,6 +8,9 @@
 * .Net 6 + with Blazor WebAssembly Tool
 * WebView2 on Windows / webkit2gtk on Linux
 
+## How To Build
+Run 'cargo tauri build' under the main directory to pack the executable file.
+
 ## Utilities
 |           |           |
 |  ----  | ----  |
