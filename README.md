@@ -2,6 +2,8 @@
 一个简单的网络调试工具 \
  Simple tool for WebSocket, TCP/UDP testing.
 
+![Web Socket Tool Preview](/preview/ws_preview.png)
+
 ## Requirement
 * Rust 1.63 +
 * Tauri 1.0 +
