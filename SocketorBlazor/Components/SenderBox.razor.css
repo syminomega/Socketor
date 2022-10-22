@@ -1,30 +1,39 @@
 .sender-box-main {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 100px;
+    row-gap: 0;
+    column-gap: 0;
+
     position: absolute;
-    display: flex;
-    flex-direction: column;
-    margin-left: 4px;
-    margin-bottom: 4px;
+    width: 100%;
+    height: 100%;
 }
 
 .sender-config {
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: 8px;
     display: flex;
     align-items: center;
-}
 
-.sender-box {
-    display: flex;
-    flex-grow: 1;
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 1;
+    grid-column-end: 3;
 }
 
 .sender-input {
-    flex-grow: 1;
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 1;
+    grid-column-end: 2;
 }
 
 .sender-button {
-    position: relative;
-    width: 100px;
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    
     font-size: 20px;
     font-weight: 440;
 }
@@ -36,6 +45,7 @@
     box-shadow: none;
     border-radius: 0;
     padding: 0;
+    margin: 0;
     text-align: center;
 }
 .line-input:focus{
@@ -43,15 +53,4 @@
 }
 .line-input:hover{
     border-color: var(--primary-focused);
-}
-
-/*移除数字加减按钮*/
-input[type=number] {
-    -moz-appearance: textfield;
-}
-
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
 }

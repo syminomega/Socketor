@@ -1,6 +1,7 @@
 .group-title {
     z-index: 1;
     position: absolute;
+    box-sizing: border-box;
 
     width: 100%;
     border-radius: 7px 7px 0 0;
@@ -18,6 +19,10 @@
     user-select: none;
     cursor: default;
 }
-.group-box-section{
-    position: absolute;
+
+.group-box-section {
+    position: relative;
+    box-sizing: border-box;
+    /*ax-section边距为4px*/
+    height: calc(100% - 8px);
 }

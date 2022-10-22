@@ -1,18 +1,19 @@
+.tool-section{
+    padding: 2px;
+    margin: 40px 4px 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
 .config-input{
-    margin: 0 4px;
-    width: calc(100% - 8px);
+    position: relative;
+    margin: 4px;
+    width: auto;
 }
 .config-title{
     -webkit-user-select: none;
     user-select: none;
     padding: 0 8px;
     color: var(--text-main);
-}
-.tool-section{
-    flex-grow: 1;
-    padding: 2px;
-    margin: 40px 4px 8px 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
 }

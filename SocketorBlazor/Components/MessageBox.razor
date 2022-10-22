@@ -15,8 +15,7 @@
 
     private List<MessageItemDto> MessageItems { get; set; } = new()
     {
-        new MessageItemDto("Hello", OwnerType.Log),
-        new MessageItemDto("World", OwnerType.Receive),
+        
     };
 
     public void AddItem(string message, OwnerType ownerType)

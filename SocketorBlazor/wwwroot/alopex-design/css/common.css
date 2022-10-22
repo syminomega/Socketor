@@ -1,19 +1,22 @@
 * {
     margin: 0;
     padding: 0;
+
     color: var(--text-main);
+    font-family: -apple-system, Inter, Avenir, Helvetica, Arial, sans-serif;
 }
 
 :root {
     font-size: 16px;
-    line-height: 24px;
     font-weight: 400;
-    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 24px;
+
     color: var(--text-main);
     background-color: var(--background-main);
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
+
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
@@ -50,11 +53,11 @@ a:hover {
     color: var(--text-main);
 }
 
-.ax-card{
+.ax-card {
     border-radius: 4px;
     box-shadow: 3px 3px 8px var(--shader-shadow);
-    
-    
+
+
     border: 1px solid transparent;
     background-clip: padding-box, border-box;
     background-origin: padding-box, border-box;
@@ -120,3 +123,54 @@ input, textarea {
 }
 
 /*勾选框*/
+input[type=checkbox] {
+    margin: 2px;
+    height: 20px;
+    width: 20px;
+    visibility: hidden;
+    position: relative;
+}
+
+input[type=checkbox]:after {
+    position: absolute;
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+
+    content: "";
+    background-color: var(--background-button);
+    color: black;
+
+    display: inline-block;
+    visibility: visible;
+    cursor: pointer;
+
+    border: var(--border-main) solid 1px;
+    border-radius: 4px;
+}
+
+input[type=checkbox]:checked:after {
+    border-color: transparent;
+    text-align: center;
+    content: "✓";
+    font-size: 14px;
+    font-weight: bold;
+    background-color: var(--primary);
+    color: white;
+}
+
+label{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+/*移除数字加减按钮*/
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

@@ -1,13 +1,11 @@
-<div class="ax-fill sender-box-main">
+<div class="sender-box-main">
     <div class="sender-config ax-section">
         <label><input type="checkbox" @bind="_keepContent"/>发送后保留文本</label>
         <label><input type="checkbox" @bind="_continuously"/>连续发送</label>
         <label>间隔<input @bind="_interval" type="number" class="line-input" style="width: 60px"/>秒</label>
     </div>
-    <div class="sender-box">
-        <textarea @bind="Content" class="sender-input" placeholder="输入文本消息..."></textarea>
-        <button @onclick="SendMessage" class="sender-button">发送</button>
-    </div>
+    <textarea @bind="Content" class="sender-input" placeholder="输入文本消息..."></textarea>
+    <button @onclick="SendMessage" class="sender-button">发送</button>
 </div>
 
 @code {
