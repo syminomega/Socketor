@@ -64,3 +64,25 @@
         transform: rotate(45deg) rotateX(-385deg) rotateY(385deg);
     }
 }
+
+/*工具栏区域*/
+.tool-section{
+    padding: 2px;
+    margin: 40px 4px 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+/*工具栏输入框样式*/
+.config-input{
+    position: relative;
+    margin: 4px;
+    width: auto;
+}
+/*工具栏标题*/
+.config-title{
+    -webkit-user-select: none;
+    user-select: none;
+    padding: 0 8px;
+    color: var(--text-main);
+}
