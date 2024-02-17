@@ -3,7 +3,8 @@
     height: 100%;
     padding: 8px;
     box-sizing: border-box;
-    background-color: var(--background-section);
+    /*background-color: var(--background-section);*/
+    background-color: transparent;
     border-right: 1px solid var(--border-separator-main);
     position: relative;
 }

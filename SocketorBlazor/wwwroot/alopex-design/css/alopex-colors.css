@@ -9,7 +9,7 @@
     --success: #28B82F;
     /*背景颜色*/
     --background-main: #E8E9EC;
-    --background-main-blur: rgba(244, 243, 243, 0.5);
+    --background-main-blur: rgba(236, 236, 236, 0.65);
     --background-window: #E8E9EC;
     --background-focused-mask: #9FA2AC7F;
     --background-selected-mask: #C8CBD47F;
@@ -44,8 +44,8 @@
 @media (prefers-color-scheme: dark) {
     :root{
         /*背景颜色*/
-        --background-main: #2f2f2f;
-        --background-main-blur: rgba(56, 56, 58, 0.5);
+        --background-main: #2F2F2F;
+        --background-main-blur: rgba(45, 45, 45, 0.65);
         --background-window: #2f2f2f;
         /*--background-focused-mask: #9FA2AC7F;*/
         /*--background-selected-mask: #C8CBD47F;*/

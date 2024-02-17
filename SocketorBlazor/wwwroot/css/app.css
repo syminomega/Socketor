@@ -4,6 +4,7 @@
     height: 100%;
     overflow: hidden;
     position: absolute;
+    background: var(--background-main-blur);
 }
 #app{
     margin: 0;

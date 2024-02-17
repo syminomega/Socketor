@@ -1,9 +1,10 @@
 use std::net::TcpListener;
 
-static mut TCP_SERVER: Option<TcpListener> = None;
+
 
 #[tauri::command]
 pub fn start_tcp_server(host: &str) -> bool {
+    let mut TCP_SERVER: Option<TcpListener> = None;
     if let Some(_tcp_server)= &TCP_SERVER {
         
     }

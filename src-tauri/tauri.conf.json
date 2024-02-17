@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "socketor",
-    "version": "0.0.1"
+    "version": "0.0.2"
   },
   "tauri": {
     "allowlist": {
@@ -53,12 +53,14 @@
     "updater": {
       "active": false
     },
+    "macOSPrivateApi": true,
     "windows": [
       {
         "fullscreen": false,
         "height": 640,
         "resizable": true,
         "title": "Socketor",
+        "transparent": true,
         "width": 960
       }
     ]
