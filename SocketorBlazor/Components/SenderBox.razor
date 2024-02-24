@@ -1,6 +1,6 @@
 <div class="sender-box-main">
-    <div class="sender-config ax-section">
-        <label><input type="checkbox" @bind="_keepContent"/>发送后保留文本</label>
+    <div class="sender-config">
+        <label><input type="checkbox" @bind="_keepContent"/>保留文本</label>
         <label><input type="checkbox" @bind="_continuously"/>连续发送</label>
         <label>间隔<input @bind="_interval" type="number" class="line-input" style="width: 60px"/>秒</label>
     </div>
@@ -11,21 +11,21 @@
 @code {
 
     [Parameter]
-    public Action<string>? OnMessageSend { get; set; }
+    public EventCallback<string> OnMessageSend { get; set; }
 
     private string Content { get; set; } = "";
     bool _keepContent;
     bool _continuously;
     int _interval = 10;
 
-    private void SendMessage()
+    private async Task SendMessage()
     {
     //不发送空消息
         if (string.IsNullOrEmpty(Content))
         {
             return;
         }
-        OnMessageSend?.Invoke(Content);
+        await OnMessageSend.InvokeAsync(Content);
     //清除消息框
         if (!_keepContent)
         {

@@ -1,0 +1,16 @@
+.vertical-split {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: var(--ax-split)
+}
+
+.vertical-split-zone {
+    height: 100%;
+    margin-left: -4px;
+    margin-right: -4px;
+    cursor: col-resize;
+    position: relative;
+    z-index: 100;
+
+}

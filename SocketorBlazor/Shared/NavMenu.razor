@@ -1,18 +1,16 @@
 ﻿<div class="nav-side">
     @foreach (var nav in NavItems)
     {
-        <NavLink href="@nav.Value.NavRoute">
-            <div class="@nav.Value.NavClass" @onclick="() => { SelectNav(nav.Key); }">
-                @nav.Value.NavName
-            </div>
-        </NavLink>
+        <div class="@nav.Value.NavClass" @onclick="() => { SelectNav(nav.Key); }">
+            @nav.Value.NavName
+        </div>
     }
 
 </div>
 
 @code {
 
-    public class NavItem
+    public record NavItem
     {
         public NavItem(string navName, string navRoute, bool selected = false)
         {

@@ -2,7 +2,7 @@
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "dotnet publish ./SocketorBlazor/Socketor.csproj -c Release  -o ./dist -p:BlazorEnableCompression=false",
-    "devPath": "http://localhost:5165/ws-client",
+    "devPath": "http://localhost:5165",
     "distDir": "../dist/wwwroot",
     "withGlobalTauri": true
   },
@@ -48,7 +48,8 @@
       }
     },
     "security": {
-      "csp": null
+      "csp": null,
+      "dangerousUseHttpScheme": true
     },
     "updater": {
       "active": false

@@ -1,6 +1,6 @@
 #![cfg_attr(
-    all(not(debug_assertions), target_os = "windows"),
-    windows_subsystem = "windows"
+all(not(debug_assertions), target_os = "windows"),
+windows_subsystem = "windows"
 )]
 
 use socketor::services::tcp_server;
@@ -12,6 +12,7 @@ use window_vibrancy::{apply_blur, apply_vibrancy, NSVisualEffectMaterial};
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
+
 fn main() {
     tauri::Builder::default()
         .setup(|app| {

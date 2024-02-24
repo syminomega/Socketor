@@ -24,7 +24,7 @@
 }
 
 body {
-    background-color: var(--background-main-blur);
+    background-color: transparent;
 }
 
 a {
@@ -49,25 +49,25 @@ a:hover {
     border-radius: 8px;
     border: 1px solid var(--border-section);
     margin: 4px;
-    background-color: var(--background-section);
+    background-color: var(--ax-bg-section);
     color: var(--text-main);
 }
 
 .ax-card {
     border-radius: 4px;
-    box-shadow: 3px 3px 8px var(--shader-shadow);
+    box-shadow: 2px 2px 4px var(--shader-shadow);
 
 
     border: 1px solid transparent;
     background-clip: padding-box, border-box;
     background-origin: padding-box, border-box;
-    background-image: linear-gradient(to right, var(--background-main), var(--background-main)),
+    background-image: linear-gradient(to right, var(--ax-bg-main), var(--ax-bg-main)),
     var(--border-lighted);
 }
 
 /*按钮与输入 尺寸 布局 字体*/
 .ax-button, button, input, textarea {
-    transition: all 0.2s ease-out;
+    /*transition: all 0.2s ease-out;*/
     outline: none;
 
     border-radius: 4px;
@@ -77,12 +77,10 @@ a:hover {
 
     font-size: 14px;
     font-family: inherit;
-    color: var(--text-main);
 }
 
 .ax-button, button {
-    background-color: var(--background-button);
-    border-color: var(--border-main);
+    background-color: var(--ax-bg-btn);
 
     font-weight: 500;
     text-align: center;
@@ -91,35 +89,31 @@ a:hover {
 
     display: inline-block;
     /*position: absolute;*/
-
+    border-width: 0;
+    border-radius: 4px;
     cursor: pointer;
+    color: var(--ax-tx-btn);
 }
 
 /*按钮高亮*/
 .ax-button:hover, button:hover {
-    border-color: transparent;
-    background-clip: padding-box, border-box;
-    background-origin: padding-box, border-box;
-    background-image: linear-gradient(to right, var(--background-button), var(--background-button)),
-    var(--border-lighted);
-    box-shadow: -3px -3px 8px var(--shader-light), 3px 3px 8px var(--shader-shadow);
-    transform: scale(1.01, 1.01);
+
 }
 
 /*按钮按下*/
 .ax-button:active, button:active {
-    transition: none;
-    box-shadow: -2px -2px 6px var(--shader-light), 2px 2px 6px var(--shader-shadow);
-    transform: scale(0.99, 0.99);
+    background-color: var(--ax-bg-btn-pressed);
 }
 
 input, textarea {
-    background-color: var(--background-textfield);
+    background-color: var(--ax-bg-textfield);
     border-width: 0;
+    border-radius: 4px;
     padding: 6px 12px;
-    box-shadow: inset -2px -2px 3px var(--shader-light), inset 2px 2px 3px var(--shader-shadow);
     font-weight: 450;
     resize: none;
+
+    color: var(--text-main);
 }
 
 /*勾选框*/
@@ -137,7 +131,7 @@ input[type=checkbox]:after {
     height: calc(100% - 4px);
 
     content: "";
-    background-color: var(--background-button);
+    background-color: var(--ax-bg-button);
     color: black;
 
     display: inline-block;

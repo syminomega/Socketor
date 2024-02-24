@@ -6,7 +6,7 @@
     width: 100%;
     border-radius: 7px 7px 0 0;
     border-bottom: 1px solid var(--border-main);
-    background-color: var(--background-main-blur);
+    background-color: var(--ax-bg-main-blur);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     color: var(--text-main);

@@ -8,21 +8,34 @@
     /*成功*/
     --success: #28B82F;
     /*背景颜色*/
-    --background-main: #E8E9EC;
-    --background-main-blur: rgba(236, 236, 236, 0.65);
-    --background-window: #E8E9EC;
-    --background-focused-mask: #9FA2AC7F;
-    --background-selected-mask: #C8CBD47F;
-    --background-light-mask: #FFFFFF7F;
-    --background-section: #E2E4E7;
-    --background-pure: #FFFFFF;
+    --ax-bg-main: #ffffff;
+    --ax-bg-main-blur: rgba(236, 236, 236, 0.65);
+    --ax-bg-window: #E8E9EC;
+    --ax-bg-focused-mask: #9FA2AC7F;
+    --ax-bg-selected-mask: #C8CBD47F;
+    --ax-bg-light-mask: #FFFFFF7F;
+    --ax-bg-section: #E2E4E7;
+    --ax-bg-pure: #FFFFFF;
 
-    --background-button: #F1F2F6;
-    --background-button-disabled: #E8E9EC;
-    --background-textfield: #F1F2F6;
+    --ax-bg-button: #c1c1c1;
+    --ax-bg-button-disabled: #E8E9EC;
+    --ax-bg-textfield: #F1F2F6;
 
+    /*导航边栏*/
+    --ax-bg-navbar: rgba(236, 236, 236, 0.65);
+    /*工具栏*/
+    --ax-bg-toolbar: rgba(230, 230, 230, 0.65);
+    /*信息边栏*/
+    --ax-bg-infobar: #ebebe9;
+    /*分割线*/
+    --ax-split: #d5d4d3;
+    /*默认按钮*/
+    --ax-bg-btn: #c9c9c5;
+    --ax-bg-btn-pressed: #bcbcb9;
 
     /*文本颜色*/
+    --ax-tx-btn: #3c3c3b;
+    
     --text-main: #515A6E;
     --text-main-disabled: #515A6E80;
     --text-secondary: #BABBBD;
@@ -34,7 +47,7 @@
     /*边框颜色*/
     --border-main: #A6A9BB;
     --border-section: #A8ABBD;
-    --border-separator-main: #B0B2BD;
+    --border-separator-main: #d5d4d2;
     --border-separator-menu: #CFD1DE;
 
     --border-lighted: linear-gradient(to bottom right, white 0%, rgb(204, 211, 221, 0.5) 100%)
@@ -42,23 +55,36 @@
 
 
 @media (prefers-color-scheme: dark) {
-    :root{
+    :root {
         /*背景颜色*/
-        --background-main: #2F2F2F;
-        --background-main-blur: rgba(45, 45, 45, 0.65);
-        --background-window: #2f2f2f;
-        /*--background-focused-mask: #9FA2AC7F;*/
-        /*--background-selected-mask: #C8CBD47F;*/
-        /*--background-light-mask: #FFFFFF7F;*/
-        --background-section: #282828;
-        /*--background-pure: #FFFFFF;*/
+        --ax-bg-main: #1f1e1c;
+        --ax-bg-main-blur: rgba(45, 45, 45, 0.65);
+        --ax-bg-window: #2f2f2f;
+        /*--ax-bg-focused-mask: #9FA2AC7F;*/
+        /*--ax-bg-selected-mask: #C8CBD47F;*/
+        /*--ax-bg-light-mask: #FFFFFF7F;*/
+        --ax-bg-section: #282828;
+        /*--ax-bg-pure: #FFFFFF;*/
+
+        --ax-bg-button: #3a3a3a;
+        /*--ax-bg-button-disabled: #E8E9EC;*/
+        --ax-bg-textfield: #262626;
+
+        /*导航边栏*/
+        --ax-bg-navbar: rgba(45, 45, 45, 0.65);
+        /*工具栏*/
+        --ax-bg-toolbar: rgba(60, 60, 60, 0.65);
+        /*信息边栏*/
+        --ax-bg-infobar: #252422;
+        /*分割线*/
+        --ax-split: #000000;
+        /*默认按钮*/
+        --ax-bg-btn: #5b5955;
+        --ax-bg-btn-pressed: #bcbcb9;
         
-        --background-button: #3a3a3a;
-        /*--background-button-disabled: #E8E9EC;*/
-        --background-textfield: #262626;
-
-
         /*文本颜色*/
+        --ax-tx-btn: #c1c1c1;
+        
         --text-main: #f6f6f6;
         /*--text-main-disabled: #515A6E80;*/
         /*--text-secondary: #BABBBD;*/
@@ -72,7 +98,7 @@
         --border-section: #404040;
         --border-separator-main: #4b4d51;
         /*--border-separator-menu: #CFD1DE;*/
-        
+
         --border-lighted: linear-gradient(to bottom right, #525252 0%, #16161780 100%)
 
     }

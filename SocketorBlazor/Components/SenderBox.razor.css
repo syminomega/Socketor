@@ -11,9 +11,10 @@
 }
 
 .sender-config {
-    padding: 8px;
     display: flex;
     align-items: center;
+    padding-left: 4px;
+    padding-top: 4px;
 
     grid-row-start: 1;
     grid-row-end: 2;
@@ -33,9 +34,16 @@
     grid-row-end: 3;
     grid-column-start: 2;
     grid-column-end: 3;
-    
-    font-size: 20px;
+
+    font-size: 16px;
     font-weight: 440;
+    margin-left: 0;
+    margin-right: 0;
+
+    position: absolute;
+    width: calc(100% - 4px);
+    bottom: 0;
+    height: 32px;
 }
 
 /*时间输入框样式*/
@@ -48,9 +56,11 @@
     margin: 0;
     text-align: center;
 }
-.line-input:focus{
+
+.line-input:focus {
     border-color: var(--primary);
 }
-.line-input:hover{
+
+.line-input:hover {
     border-color: var(--primary-focused);
 }

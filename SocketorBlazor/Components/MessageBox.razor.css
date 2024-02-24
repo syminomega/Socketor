@@ -1,20 +1,25 @@
 .message-scroll-section {
-    position: relative;
+    position: absolute;
     overflow-y: scroll;
     overflow-x: hidden;
-    padding: 40px 12px 10px 16px;
+    padding: 52px 12px 10px 16px;
     box-sizing: border-box;
     height: 100%;
+    margin-left: 0;
+    width: calc(100% - 4px);
+
+    display: flex;
+    flex-direction: column;
 }
 
 /*滚动条样式*/
 .message-scroll-section::-webkit-scrollbar {
-    width: 4px;
+    width: 8px;
     height: 4px;
 }
 
 .message-scroll-section::-webkit-scrollbar-thumb {
-    border-radius: 2px;
+    border-radius: 4px;
     background: rgba(128, 128, 128, 0.5);
 }
 

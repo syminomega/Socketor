@@ -1,0 +1,21 @@
+<div class="vertical-split" style="@Style">
+    @* 左右调整宽度，无内容 *@
+    <div class="vertical-split-zone" @onmousedown="MouseDown"></div>
+</div>
+
+@code {
+    [Parameter] public string Style { get; set; } = "";
+    [Parameter] public EventCallback DragStart { get; set; }
+
+    private async Task MouseDown(MouseEventArgs e)
+    {
+        if (e.Button != 0)
+        {
+            return;
+        }
+
+        await DragStart.InvokeAsync();
+    }
+
+
+}

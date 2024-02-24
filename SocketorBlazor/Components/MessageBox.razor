@@ -1,40 +1,42 @@
 @using Socketor.DataModel
 @inject IJSRuntime Js
-<GroupBox Title="消息列表">
-    <div class="message-scroll-section">
-        @foreach (var item in MessageItems)
-        {
-            <MessageBoxItem Content="@item.Content" Time="@item.Time" OwnerType="@item.OwnerType"/>
-        }
-        <div @ref="_messageEnd" style="height: 2px"></div>
-    </div>
-</GroupBox>
+
+<div class="message-scroll-section">
+    @foreach (var item in MessageItems)
+    {
+        <MessageBoxItem Content="@item.Content" Time="@item.Time" OwnerType="@item.OwnerType"/>
+    }
+    <div @ref="_messageEnd" style="height: 2px"></div>
+</div>
 
 @code {
     private ElementReference _messageEnd;
 
-    private List<MessageItemDto> MessageItems { get; set; } = new()
-    {
-        
-    };
+    private LinkedList<MessageItemDto> MessageItems { get; set; } = [];
 
     public void AddItem(string message, OwnerType ownerType)
     {
-    //超过50条消息时，移除两条
+        var messageItem = new MessageItemDto(message, ownerType);
+        AddItem(messageItem);
+    }
+
+    public void AddItem(MessageItemDto messageItem)
+    {
+        //超过50条消息时，移除两条
         if (MessageItems.Count > 50)
         {
-            MessageItems.RemoveAt(0);
-            MessageItems.RemoveAt(0);
+            MessageItems.RemoveFirst();
+            MessageItems.RemoveFirst();
         }
-    //添加新消息
-        MessageItems.Add(new MessageItemDto(message, ownerType));
-        StateHasChanged();
 
+        //添加新消息
+        MessageItems.AddLast(messageItem);
+        StateHasChanged();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-    //移动到底部
+        //移动到底部
         await Js.InvokeVoidAsync("socketorUtilities.scrollToTarget", _messageEnd);
         await base.OnAfterRenderAsync(firstRender);
     }
