@@ -3447,6 +3447,7 @@ dependencies = [
 name = "socketor"
 version = "0.0.2"
 dependencies = [
+ "lazy_static",
  "serde",
  "serde_json",
  "tauri",

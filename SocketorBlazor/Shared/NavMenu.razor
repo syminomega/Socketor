@@ -1,7 +1,7 @@
 ﻿<div class="nav-side">
     @foreach (var nav in NavItems)
     {
-        <div class="@nav.Value.NavClass" @onclick="() => { SelectNav(nav.Key); }">
+        <div class="@nav.Value.NavClass" @onclick="async () => { await SelectNav(nav.Key); }">
             @nav.Value.NavName
         </div>
     }
@@ -10,17 +10,18 @@
 
 @code {
 
+    [Parameter]
+    public EventCallback<int> OnNavSelected { get; set; }
+
     public record NavItem
     {
-        public NavItem(string navName, string navRoute, bool selected = false)
+        public NavItem(string navName, bool selected = false)
         {
-            NavRoute = navRoute;
             NavName = navName;
             Selected = selected;
         }
 
-        public string NavName { get; set; }
-        public string NavRoute { get; set; }
+        public string NavName { get; }
 
         public bool Selected
         {
@@ -32,20 +33,21 @@
 
     private Dictionary<int, NavItem> NavItems { get; set; } = new()
     {
-        {1, new NavItem("W S 客户端", "ws-client", true)},
-        {2, new NavItem("TCP 客户端", "tcp-client")},
-        {3, new NavItem("TCP 服务器", "tcp-server")},
-        {4, new NavItem("UDP 客户端", "udp-client")},
+        {1, new NavItem("W S 客户端", true)},
+        {2, new NavItem("TCP 客户端")},
+        {3, new NavItem("TCP 服务器")},
+        {4, new NavItem("UDP 客户端")},
     };
 
     private int _selectedNavId = 1;
 
-    private void SelectNav(int navId)
+    private async Task SelectNav(int navId)
     {
         NavItems[_selectedNavId].Selected = false;
         NavItems[navId].Selected = true;
         _selectedNavId = navId;
-        StateHasChanged();
+        //StateHasChanged();
+        await OnNavSelected.InvokeAsync(navId);
     }
 
 }

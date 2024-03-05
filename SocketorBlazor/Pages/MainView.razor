@@ -6,7 +6,7 @@
      @onmousemove="MouseMove" @onmouseup="MouseUpOrLeave" @onmouseleave="MouseUpOrLeave"
      style="grid-template-columns: @(_navMenuWidth)px 1px 1fr 1px @(_propertyAreaWidth)px;">
     <div class="nav-menu">
-        <NavMenu/>
+        <NavMenu OnNavSelected="OnNavChanged"/>
     </div>
     <VerticalSplit Style="grid-column-start: 2; grid-column-end: 3" DragStart="DragStartNavMenu"/>
     <div class="content-area">
@@ -29,6 +29,7 @@
     </div>
 </div>
 <WebSocketClient @ref="_webSocketClient"/>
+<TcpServer @ref="_tcpServer"/>
 
 
 @code {
@@ -36,7 +37,20 @@
     private MessageBox _messageBox = null!;
 
     private WebSocketClient _webSocketClient = null!;
+    private TcpServer _tcpServer = null!;
 
+    private void OnNavChanged(int id)
+    {
+        switch (id)
+        {
+            case 1:
+                SwitchBackend(_webSocketClient);
+                break;
+            case 2:
+                SwitchBackend(_tcpServer);
+                break;
+        }
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -44,21 +58,6 @@
         if (firstRender)
         {
             SwitchBackend(_webSocketClient);
-        }
-    }
-
-    private IMessageBackend? _currentBackend;
-
-    private void ShowMessage(MessageItemDto message)
-    {
-        _messageBox.AddItem(message);
-    }
-
-    private async Task SendMessage(string m)
-    {
-        if (_currentBackend != null)
-        {
-            await _currentBackend.SendMessageAsync(m);
         }
     }
 
@@ -77,6 +76,24 @@
         StateHasChanged();
     }
 
+    #region ShowAndSend
+
+    private IMessageBackend? _currentBackend;
+
+    private void ShowMessage(MessageItemDto message)
+    {
+        _messageBox.AddItem(message);
+    }
+
+    private async Task SendMessage(string m)
+    {
+        if (_currentBackend != null)
+        {
+            await _currentBackend.SendMessageAsync(m);
+        }
+    }
+
+    #endregion
 
     #region ResizeArea
 
@@ -144,6 +161,5 @@
     }
 
     #endregion
-
 
 }

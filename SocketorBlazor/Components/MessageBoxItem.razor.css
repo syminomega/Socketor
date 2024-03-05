@@ -6,7 +6,7 @@
 }
 
 .message-main {
-    border-radius: 4px;
+
     background-color: #e6e6e8;
 
     padding: 4px 8px 2px 8px;
@@ -16,6 +16,18 @@
     cursor: default;
 
     flex: 1;
+}
+
+.message-Send {
+    border-radius: 4px 0 0 4px;
+}
+
+.message-Receive {
+    border-radius: 0 4px 4px 0;
+}
+
+.message-Log {
+    border-radius: 4px;
 }
 
 .message-time {
@@ -52,19 +64,16 @@
 
 .mark-Send, .mark-Receive {
     width: 8px;
-    border-radius: 4px;
-    /*box-shadow: 2px 2px 4px var(--shader-shadow);*/
-    /*border: 1px solid;*/
 }
 
 .mark-Send {
-    margin-left: 4px;
+    border-radius: 0 4px 4px 0;
     background-color: #149119;
     border-color: #25b72a;
 }
 
 .mark-Receive {
-    margin-right: 4px;
+    border-radius: 4px 0 0 4px;
     background-color: #2978de;
     border-color: #4191ec;
 }
