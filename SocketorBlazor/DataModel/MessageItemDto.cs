@@ -1,16 +1,10 @@
 namespace Socketor.DataModel;
 
-public class MessageItemDto
+public class MessageItemDto(string content, OwnerType ownerType)
 {
-    public MessageItemDto(string content, OwnerType ownerType)
-    {
-        Time = DateTime.Now;
-        Content = content;
-        OwnerType = ownerType;
-    }
-    public DateTime Time { get; }
-    public string Content { get; }
-    public OwnerType OwnerType { get; }
+    public DateTime Time { get; } = DateTime.Now;
+    public string Content { get; } = content;
+    public OwnerType OwnerType { get; } = ownerType;
 }
 
 public enum OwnerType

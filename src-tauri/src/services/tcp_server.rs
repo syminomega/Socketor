@@ -4,6 +4,8 @@ use std::sync::{Mutex};
 use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 
+//TODO:Multi windows support
+
 //use lazy_static::lazy_static;
 static CLIENTS: Mutex<Vec<TcpStream>> = Mutex::new(Vec::new());
 static SERVER_HANDLE: Mutex<Option<std::thread::JoinHandle<bool>>> = Mutex::new(None);
@@ -66,9 +68,9 @@ fn handle_connection(mut stream: TcpStream) {
 #[tauri::command]
 pub fn stop_tcp_server() -> bool {
     let mut stopped = false;
-    //停止监听
+    //set the flag to stop the server
     SERVER_SHOULD_SHUTDOWN.store(true, std::sync::atomic::Ordering::Relaxed);
-
+    //send a dummy connection to unblock the server
     if let Some(local_addr) = LOCAL_ADDR.lock().unwrap().take() {
         let _ = TcpStream::connect_timeout(&local_addr, std::time::Duration::from_secs(1));
     }
@@ -76,7 +78,7 @@ pub fn stop_tcp_server() -> bool {
     if let Some(handle) = SERVER_HANDLE.lock().unwrap().take() {
         stopped = handle.join().unwrap();
     }
-    //关闭所有客户端
+    //disconnect and clear all clients
 
     let mut clients = CLIENTS.lock().unwrap();
     for client in clients.iter() {

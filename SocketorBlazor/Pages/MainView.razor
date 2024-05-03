@@ -2,6 +2,9 @@
 @using Socketor.Components.Backends
 @using Socketor.DataModel
 @using Socketor.Utilities
+@inject TauriApi.Event TauriEvent
+@inject TauriApi.Window TauriWindow
+
 <div class="main-layout"
      @onmousemove="MouseMove" @onmouseup="MouseUpOrLeave" @onmouseleave="MouseUpOrLeave"
      style="grid-template-columns: @(_navMenuWidth)px 1px 1fr 1px @(_propertyAreaWidth)px;">
@@ -50,6 +53,15 @@
                 SwitchBackend(_tcpServer);
                 break;
         }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        // await TauriEvent.Listen<object>("show_test", s => ShowMessage(new MessageItemDto(s.ToString() ?? "", OwnerType.Log)));
+        var window = await TauriWindow.AppWindow.Value;
+        // ShowMessage(new MessageItemDto($"窗口标签:{window.Label}", OwnerType.Log));
+        await window.Listen<object>("show_test", s => ShowMessage(new MessageItemDto(s.ToString() ?? "", OwnerType.Log)));
     }
 
     protected override void OnAfterRender(bool firstRender)
