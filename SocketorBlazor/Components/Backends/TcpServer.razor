@@ -41,7 +41,7 @@
         else
         {
             //后端启动TCP服务
-            var isSuccess = await Tauri.Invoke<bool>("start_tcp_server", new { host = ServerHost });
+            var isSuccess = await Tauri.Invoke<bool>("start_tcp_server", new { label = "123", host = ServerHost });
             if (isSuccess)
             {
                 _connected = true;

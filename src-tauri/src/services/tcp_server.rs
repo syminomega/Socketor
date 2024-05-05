@@ -1,61 +1,77 @@
+use std::collections::HashMap;
+use std::error::Error;
 use std::io::Read;
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::sync::{Mutex};
 use std::sync::atomic::AtomicBool;
-use std::sync::mpsc;
+use lazy_static::lazy_static;
 
-//TODO:Multi windows support
+// all instances of the server
+lazy_static! {
+    static ref SERVER_INSTANCES: Mutex<HashMap<String, TcpServerInstance>> = {
+        let map = HashMap::new();
+        Mutex::new(map)
+    };
+}
 
-//use lazy_static::lazy_static;
+pub struct TcpServerInstance {
+    label: String,
+    host: String,
+    server_should_shutdown: AtomicBool,
+    local_addr: Mutex<Option<SocketAddr>>,
+}
+
+impl TcpServerInstance {
+    pub fn new(label: &str, host: &str) -> TcpServerInstance {
+        let instance = TcpServerInstance {
+            label: label.into(),
+            host: host.into(),
+            server_should_shutdown: AtomicBool::new(false),
+            local_addr: Mutex::new(None),
+        };
+        instance
+    }
+    pub fn init(self) -> Result<(),Box<dyn Error>>  {
+        let instance_label = self.label.clone();
+        // insert the instance into the global instances map
+        let instance = &SERVER_INSTANCES.lock()?.insert(self.label.clone(), self).unwrap();
+
+        let server = TcpListener::bind(&instance.host)?;
+
+        let local_addr = server.local_addr().unwrap();
+        instance.local_addr.lock().unwrap().replace(local_addr);
+
+        let instance_label_thread = instance_label.clone();
+        std::thread::spawn(move || {
+            for stream in server.incoming() {
+                let instance = SERVER_INSTANCES.lock().unwrap();
+                let instance = instance.get(&instance_label_thread).unwrap();
+                //收到停止信号
+                if instance.server_should_shutdown.load(std::sync::atomic::Ordering::Relaxed) {
+                    break;
+                }
+                //处理新的连接
+                match stream {
+                    Ok(stream) => {
+                        println!("新的客户端连接");
+                        CLIENTS.lock().unwrap().push(stream);
+                    }
+                    Err(e) => {
+                        println!("连接失败:{}", e);
+                    }
+                }
+            }
+
+        });
+        Ok(())
+    }
+}
+
 static CLIENTS: Mutex<Vec<TcpStream>> = Mutex::new(Vec::new());
-static SERVER_HANDLE: Mutex<Option<std::thread::JoinHandle<bool>>> = Mutex::new(None);
-static SERVER_SHOULD_SHUTDOWN: AtomicBool = AtomicBool::new(false);
-static LOCAL_ADDR: Mutex<Option<SocketAddr>> = Mutex::new(None);
 
 
 #[tauri::command]
-pub fn start_tcp_server(host: &str) -> bool {
-    let server = TcpListener::bind(host);
-    let server = match server {
-        Err(_error) => {
-            println!("{}", _error);
-            //TODO:返回错误信息
-            return false;
-        }
-        Ok(_server) => {
-            println!("Listening at {}", host);
-            _server
-        }
-    };
-
-    //let (tx, rx) = mpsc::channel();
-    // 克隆一个发送者
-    //let tx1 = tx.clone();
-
-    SERVER_SHOULD_SHUTDOWN.store(false, std::sync::atomic::Ordering::Relaxed);
-    let local_addr = server.local_addr().unwrap();
-    LOCAL_ADDR.lock().unwrap().replace(local_addr);
-
-    let server_thread = std::thread::spawn(move || {
-        for stream in server.incoming() {
-            //收到停止信号
-            if SERVER_SHOULD_SHUTDOWN.load(std::sync::atomic::Ordering::Relaxed) {
-                break;
-            }
-            //处理新的连接
-            match stream {
-                Ok(stream) => {
-                    println!("新的客户端连接");
-                    CLIENTS.lock().unwrap().push(stream);
-                }
-                Err(e) => {
-                    println!("连接失败:{}", e);
-                }
-            }
-        }
-        true
-    });
-    SERVER_HANDLE.lock().unwrap().replace(server_thread);
+pub fn start_tcp_server(label: &str, host: &str) -> bool {
     true
 }
 
@@ -66,18 +82,25 @@ fn handle_connection(mut stream: TcpStream) {
 }
 
 #[tauri::command]
-pub fn stop_tcp_server() -> bool {
-    let mut stopped = false;
+pub fn stop_tcp_server(label: &str) -> bool {
     //set the flag to stop the server
-    SERVER_SHOULD_SHUTDOWN.store(true, std::sync::atomic::Ordering::Relaxed);
-    //send a dummy connection to unblock the server
-    if let Some(local_addr) = LOCAL_ADDR.lock().unwrap().take() {
-        let _ = TcpStream::connect_timeout(&local_addr, std::time::Duration::from_secs(1));
+    let mut instances = SERVER_INSTANCES.lock().unwrap();
+
+    match instances.get(label) {
+        Some(instance) => {
+            instance.server_should_shutdown.store(true, std::sync::atomic::Ordering::Relaxed);
+            //send a dummy connection to unblock the server
+            if let Some(local_addr) = instance.local_addr.lock().unwrap().take() {
+                let _ = TcpStream::connect_timeout(&local_addr, std::time::Duration::from_secs(1));
+            }
+            instances.remove(label);
+        }
+        None => {
+            println!("未找到实例:{}", label);
+            return false;
+        }
     }
 
-    if let Some(handle) = SERVER_HANDLE.lock().unwrap().take() {
-        stopped = handle.join().unwrap();
-    }
     //disconnect and clear all clients
 
     let mut clients = CLIENTS.lock().unwrap();
@@ -86,11 +109,6 @@ pub fn stop_tcp_server() -> bool {
     }
     clients.clear();
 
-    if stopped {
-        println!("TCP Server 停止监听");
-        true
-    } else {
-        println!("TCP Server 停止监听失败");
-        false
-    }
+    println!("TCP Server 停止监听");
+    true
 }
