@@ -11,7 +11,6 @@ use window_vibrancy::apply_mica;
 #[cfg(target_os = "macos")]
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 
-
 fn main() {
     let menu = socketor::menu::create_default_menu();
 
@@ -22,6 +21,16 @@ fn main() {
                 "new-instance" => {
                     let app = event.window().app_handle();
                     socketor::menu::create_new_instance(app);
+                }
+                _ => {}
+            }
+        })
+        .on_window_event(|event| {
+            let event_type = event.event();
+            match event_type {
+                tauri::WindowEvent::CloseRequested { .. } => {
+                    let window = event.window();
+                    tcp_server::stop_tcp_server_base(window);
                 }
                 _ => {}
             }
@@ -37,6 +46,7 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            tcp_server::is_tcp_server_running,
             tcp_server::start_tcp_server,
             tcp_server::stop_tcp_server,
             init_process,

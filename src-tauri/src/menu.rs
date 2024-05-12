@@ -6,7 +6,7 @@ use window_vibrancy::apply_mica;
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 
 pub fn create_default_menu() -> Menu {
-    let menu = Menu::new()
+    Menu::new()
         .add_submenu(Submenu::new(
             "Socketor",
             Menu::new()
@@ -44,8 +44,7 @@ pub fn create_default_menu() -> Menu {
             Menu::new()
                 .add_native_item(MenuItem::Minimize)
                 .add_native_item(MenuItem::Zoom),
-        ));
-    menu
+        ))
 }
 
 // Increment the instance count and create a new window

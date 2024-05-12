@@ -3,7 +3,7 @@ use tauri::Window;
 #[derive(Clone, serde::Serialize)]
 pub struct MessageItem {
     pub content: String,
-    pub mgs_type: MessageType,
+    pub msg_type: MessageType,
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -16,7 +16,7 @@ pub enum MessageType {
 pub fn show_message(message: &str, msg_type: MessageType, window: &Window) {
     let message = MessageItem {
         content: message.to_string(),
-        mgs_type: msg_type,
+        msg_type,
     };
     match window.emit("show-message",message) {
         Ok(_) => {
@@ -26,4 +26,10 @@ pub fn show_message(message: &str, msg_type: MessageType, window: &Window) {
             println!("send message to front error:{}", e);
         }
     }
+}
+
+#[derive(Clone,serde::Serialize)]
+pub struct ActionResult{
+    pub success: bool,
+    pub error_message: String,
 }

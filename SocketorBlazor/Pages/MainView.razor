@@ -49,7 +49,7 @@
             case 1:
                 SwitchBackend(_webSocketClient);
                 break;
-            case 2:
+            case 3:
                 SwitchBackend(_tcpServer);
                 break;
         }
@@ -61,7 +61,7 @@
         // await TauriEvent.Listen<object>("show_test", s => ShowMessage(new MessageItemDto(s.ToString() ?? "", OwnerType.Log)));
         var window = await TauriWindow.AppWindow.Value;
         // ShowMessage(new MessageItemDto($"窗口标签:{window.Label}", OwnerType.Log));
-        await window.Listen<object>("show_test", s => ShowMessage(new MessageItemDto(s.ToString() ?? "", OwnerType.Log)));
+        await window.Listen<BackendMessageDto>("show-message", msgItem => msgItem.HandleAsMessageItem(ShowMessage));
     }
 
     protected override void OnAfterRender(bool firstRender)

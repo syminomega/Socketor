@@ -31,8 +31,8 @@
         if (_connected)
         {
             //后端停止TCP服务
-            var isSuccess = await Tauri.Invoke<bool>("stop_tcp_server");
-            if (isSuccess)
+            var result = await Tauri.Invoke<ActionResultDto>("stop_tcp_server");
+            if (result.Success)
             {
                 _connected = false;
                 _connectButtonText = "连接";
@@ -41,14 +41,12 @@
         else
         {
             //后端启动TCP服务
-            var isSuccess = await Tauri.Invoke<bool>("start_tcp_server", new { label = "123", host = ServerHost });
-            if (isSuccess)
+            var result = await Tauri.Invoke<ActionResultDto>("start_tcp_server", new { host = ServerHost });
+            if (result.Success)
             {
                 _connected = true;
                 _connectButtonText = "断开";
             }
-
-            await Tauri.Invoke("init_process");
         }
     }
 
