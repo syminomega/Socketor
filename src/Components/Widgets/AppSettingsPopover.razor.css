@@ -1,0 +1,22 @@
+.theme-select {
+    height: 35px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.theme-select-label {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.theme-select-select {
+    /*noinspection CssUnresolvedCustomProperty*/
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-left: 0;
+    /*noinspection CssUnresolvedCustomProperty*/
+    border-top-right-radius: var(--bs-border-radius);
+    /*noinspection CssUnresolvedCustomProperty*/
+    border-bottom-right-radius: var(--bs-border-radius);
+    height: 35px;
+}

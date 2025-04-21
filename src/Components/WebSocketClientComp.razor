@@ -1,0 +1,311 @@
+@using System.Net.WebSockets
+@using System.Text
+@using Blazored.LocalStorage
+@using Microsoft.Extensions.Localization
+@using Socketor.Components.Widgets
+@using Socketor.DataModel.Configs
+@using Microsoft.AspNetCore.Components.Sections
+@using Socketor.DataModel
+@inject IStringLocalizer<WebSocketClientComp> Localizer
+@inject ILocalStorageService LocalStorage
+@inject ToastService ToastService
+
+<div class="ws-client-main">
+    <div class="ws-client-left">
+        <Split IsVertical="true" Basis="65%" FirstPaneMinimumSize="200px" SecondPaneMinimumSize="80px">
+            <FirstPaneTemplate>
+                <div class="ws-client-left-top">
+                    <BootstrapInputGroup>
+                        <BootstrapInputGroupLabel
+                            DisplayText="@Localizer["WebSocketAddress"]"/>
+                        <BootstrapInput TValue="string" @bind-Value="Config.WebSocketAddress"/>
+                        <Button Text="@ConnectButtonText()" Color="ConnectButtonColor()"
+                                OnClick="ChangeConnectStateClick" IsAsync="true"></Button>
+                    </BootstrapInputGroup>
+                    <MessageBox @ref="_messageBox" ConfigSectionName="@WsClientMsgBoxConfigSectionName"
+                                MessageBoxConfig="Config.MessageBoxConfig"/>
+                </div>
+            </FirstPaneTemplate>
+            <SecondPaneTemplate>
+                <div class="ws-client-left-bottom">
+                    <SendBox ConfigSectionName="@WsClientSendBoxConfigSectionName"
+                             SendBoxConfig="Config.SendBoxConfig" Enabled="_isConnected"
+                             OnMessageSend="OnMessageSend"/>
+                </div>
+            </SecondPaneTemplate>
+        </Split>
+
+    </div>
+
+    <div style="grid-column: 2; position: relative; width: calc(100% + 4px)">
+        <Scroll style="position: absolute;">
+            <div class="ws-client-right-container">
+                <Card HeaderText="@Localizer["ConnectionSettings"]" IsCollapsible="true">
+                    <BodyTemplate>
+                        <div class="config-list">
+                            <div>@Localizer["WebSocketState"]</div>
+                            <BootstrapInputGroup>
+                                <Display TValue="string" Value="_connectionState"></Display>
+                                <Button Icon="fa-solid fa-rotate"
+                                        OnClick="RefreshWebSocketState"></Button>
+                            </BootstrapInputGroup>
+                        </div>
+                    </BodyTemplate>
+                </Card>
+                <SectionOutlet SectionName="@WsClientMsgBoxConfigSectionName"/>
+                <SectionOutlet SectionName="@WsClientSendBoxConfigSectionName"/>
+            </div>
+
+        </Scroll>
+
+
+    </div>
+
+</div>
+
+@code {
+    private const string WsClientMsgBoxConfigSectionName = "WsClientMsgBoxConfig";
+    private const string WsClientSendBoxConfigSectionName = "WsClientSendBoxConfig";
+
+    private WebSocketClientConfig Config { get; set; } = new();
+
+    private string _connectionState = "Unknown";
+
+    private bool _isConnected = false;
+
+    // ws client instance
+    private ClientWebSocket _webSocket = new();
+
+    private string ConnectButtonText() =>
+        _isConnected ? Localizer["Connected"] : Localizer["Disconnected"];
+
+    private Color ConnectButtonColor() =>
+        _isConnected ? Color.Success : Color.Danger;
+
+    private MessageBox? _messageBox;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            var storedConfig = await LocalStorage.GetItemAsync<WebSocketClientConfig?>("WebSocketClientConfig");
+            if (storedConfig != null)
+            {
+                Config = storedConfig;
+            }
+        }
+    }
+
+    private void RefreshWebSocketState()
+    {
+        try
+        {
+            _connectionState = _webSocket.State.ToString();
+        }
+        catch (JSException e)
+        {
+            _connectionState = "Error";
+            ToastService.Error(Localizer["GetStateFailed"], "JS: " + e.Message);
+        }
+        catch (Exception e)
+        {
+            _connectionState = "Error";
+            ToastService.Error(Localizer["GetStateFailed"], "CS: " + e.Message);
+        }
+    }
+
+    // This method is called when the user clicks the connect/disconnect button
+    private async Task ChangeConnectStateClick()
+    {
+        if (_isConnected)
+        {
+            if (_cancelSendTokenSource != null)
+            {
+                await _cancelSendTokenSource.CancelAsync();
+                _cancelSendTokenSource.Dispose();
+                _cancelSendTokenSource = null;
+            }
+
+            if (_cancelReceiveTokenSource != null)
+            {
+                await _cancelReceiveTokenSource.CancelAsync();
+                _cancelReceiveTokenSource.Dispose();
+                _cancelReceiveTokenSource = null;
+            }
+
+            await DisconnectAsync();
+
+            if (_receiveTask != null)
+            {
+                await _receiveTask;
+                _receiveTask = null;
+            }
+        }
+        else
+        {
+            await ConnectAsync();
+            _receiveTask = BeginReceiveMessage();
+        }
+
+        RefreshWebSocketState();
+        StateHasChanged();
+    }
+
+    private async Task ConnectAsync()
+    {
+        try
+        {
+            if (_webSocket.State == WebSocketState.Open)
+            {
+                await ToastService.Warning(Localizer["AlreadyConnected"]);
+                _isConnected = true;
+                return;
+            }
+
+            var url = new Uri(Config.WebSocketAddress);
+            _webSocket = new ClientWebSocket();
+            var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await _webSocket.ConnectAsync(url, tokenSource.Token);
+            _isConnected = true;
+            var connectMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes(Localizer["ConnectToServer"]));
+            _messageBox?.AddMessage(connectMessage);
+        }
+        catch (Exception e)
+        {
+            _isConnected = false;
+            await ToastService.Error(Localizer["ConnectionFailed"], e.Message);
+        }
+    }
+
+    private async Task DisconnectAsync()
+    {
+        try
+        {
+            if (_webSocket.State == WebSocketState.Open)
+            {
+                var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Client disconnected", cancellationTokenSource.Token);
+                var disconnectMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes(Localizer["DisconnectFromServer"]));
+                _messageBox?.AddMessage(disconnectMessage);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // force abort
+            _webSocket.Abort();
+            await ToastService.Warning(Localizer["DisconnectTimeout"], Localizer["ForceAbortMessage"]);
+        }
+        catch (Exception e)
+        {
+            await ToastService.Error(Localizer["DisconnectionFailed"], e.Message);
+        }
+        finally
+        {
+            _webSocket.Dispose();
+            _isConnected = false;
+        }
+    }
+
+    private Task? _receiveTask;
+    private CancellationTokenSource? _cancelReceiveTokenSource;
+
+    private async Task BeginReceiveMessage()
+    {
+        var messageByteBuffer = new List<byte>(1024 * 2);
+        _cancelReceiveTokenSource = new CancellationTokenSource();
+
+        while (_isConnected)
+        {
+            try
+            {
+                var memory = new Memory<byte>(new byte[1024]);
+                var socketResult = await _webSocket.ReceiveAsync(memory, _cancelReceiveTokenSource.Token);
+                var bt = memory.ToArray().Take(socketResult.Count);
+                messageByteBuffer.AddRange(bt);
+                if (!socketResult.EndOfMessage) continue;
+
+                switch (socketResult.MessageType)
+                {
+                    case WebSocketMessageType.Text:
+                        var textBuffer = messageByteBuffer.ToArray();
+                        _messageBox?.AddMessage(new MessageData(MessageOwner.Receive, textBuffer));
+                        messageByteBuffer.Clear();
+                        break;
+                    case WebSocketMessageType.Binary:
+                        var binary = messageByteBuffer.ToArray();
+                        _messageBox?.AddMessage(new MessageData(MessageOwner.Receive, binary, MessageType.Binary));
+                        messageByteBuffer.Clear();
+                        break;
+                    case WebSocketMessageType.Close:
+                    default:
+                        await DisconnectAsync();
+                        break;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // await ToastService.Information(Localizer["ConnectionClosed"], Localizer["StopReceivingMessage"]);
+                await DisconnectAsync();
+            }
+            catch (Exception e)
+            {
+                // 判断当前连接是否正常
+                if (_webSocket.State == WebSocketState.Open)
+                {
+                    await ToastService.Error(Localizer["ReceiveError"], e.Message);
+                }
+                else
+                {
+                    await ToastService.Error(Localizer["ConnectionClosed"], e.Message);
+                    await DisconnectAsync();
+                }
+            }
+        }
+    }
+
+    private CancellationTokenSource? _cancelSendTokenSource;
+
+    private async Task OnMessageSend(MessageData messageData)
+    {
+        if (_webSocket.State != WebSocketState.Open)
+        {
+            await ToastService.Warning(Localizer["SendFailed"], "WebSocket state is not open");
+            return;
+        }
+
+        _cancelSendTokenSource = new CancellationTokenSource();
+        _messageBox?.AddMessage(messageData);
+        try
+        {
+            if (messageData.MessageType == MessageType.Text)
+            {
+                var message = new ArraySegment<byte>(messageData.RawMessage);
+                await _webSocket.SendAsync(message, WebSocketMessageType.Text, true, _cancelSendTokenSource.Token);
+            }
+            else
+            {
+                var message = new ArraySegment<byte>(messageData.RawMessage);
+                await _webSocket.SendAsync(message, WebSocketMessageType.Binary, true, _cancelSendTokenSource.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            await ToastService.Warning(Localizer["SendingCanceled"]);
+        }
+        catch (Exception e)
+        {
+            var errorMessage = $"{Localizer["SendFailed"]}: {e.Message}";
+            _messageBox?.AddMessage(new MessageData(MessageOwner.Error, Encoding.UTF8.GetBytes(errorMessage)));
+            await ToastService.Error(Localizer["SendFailed"], e.Message);
+        }
+
+
+        if (_cancelSendTokenSource != null)
+        {
+            _cancelSendTokenSource.Dispose();
+            _cancelSendTokenSource = null;
+        }
+    }
+
+}

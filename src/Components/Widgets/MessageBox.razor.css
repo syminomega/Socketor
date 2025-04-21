@@ -1,0 +1,7 @@
+.message-box {
+    flex-grow: 1;
+    position: relative;
+    height: 0;
+    background-color: rgba(128, 128, 128, 0.12);
+    border-radius: 6px;
+}

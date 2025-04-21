@@ -1,0 +1,47 @@
+{
+  "Socketor.Pages.Home": {
+    "WebSocketClient": "WebSocket 客户端",
+    "WebSocketServer": "WebSocket 服务器",
+    "TCPClient": "TCP 客户端",
+    "TCPServer": "TCP 服务器",
+    "UDPClient": "UDP 客户端",
+    "CreateNewInstance": "创建新实例"
+  },
+  "Socketor.Components.Widgets.AppSettingsPopover": {
+    "AppSettings": "程序设置",
+    "NeedsRestart": "语言切换重启后生效",
+    "Theme": "主题"
+  },
+  "Socketor.Components.Widgets.SendBox": {
+    "SendSettings": "发送设置",
+    "ContinuousSending": "连续发送",
+    "ContinuousSendError": "连续发送错误",
+    "Interval": "间隔",
+    "StartSending": "开始发送",
+    "StopSending": "停止发送",
+    "KeepInputText": "保留输入文本"
+  },
+  "Socketor.Components.Widgets.MessageBox": {
+    "ReceiveSettings": "接收设置"
+  },
+  "Socketor.Components.WebSocketClientComp": {
+    "WebSocketAddress": "WebSocket 地址",
+    "Disconnected": "已断开",
+    "Connected": "已连接",
+    "ConnectionSettings": "连接设置",
+    "WebSocketState": "WebSocket 状态",
+    "ConnectionClosed": "连接已关闭",
+    "DisconnectFromServer": "已断开与 WebSocket 服务端的连接",
+    "ConnectToServer": "连接到 WebSocket 服务端",
+    "GetStateFailed": "获取 WebSocket 状态失败",
+    "AlreadyConnected": "WebSocket 已连接",
+    "ConnectionFailed": "WebSocket 连接失败",
+    "DisconnectionFailed": "WebSocket 断开失败",
+    "DisconnectTimeout": "服务器响应超时",
+    "ForceAbortMessage": "已通过本地强制终止连接",
+    "ReceiveError": "接收错误",
+    "StopReceivingMessage": "停止接收消息",
+    "SendingCanceled": "消息发送已取消",
+    "SendFailed": "消息发送失败"
+  }
+}

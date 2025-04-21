@@ -1,25 +1,29 @@
 # Socketor
-一个简单的网络调试工具 \
+一个简单的网络调试工具，当前支持WebSocket，更多功能开发中。 \
  Simple tool for WebSocket, TCP/UDP testing.
 
- >但是，这是一个非常奇葩的项目！用 .net 开发网页，用 rust 开发后端逻辑，然后强行用胶水粘在了一起，纯整活+验证技术。别试图理解这个项目。
+ >这曾经是一个非常奇葩的项目，但现在好好休整了一下，接下来会持续优化。
 
 ![Web Socket Tool Preview](/preview/ws_preview.png)
 
 ## Requirement
-* Rust 1.63 +
-* Tauri 1.0 +
-* .Net 6 + with Blazor WebAssembly Tool
-* WebView2 on Windows / webkit2gtk on Linux
+* Tauri 2.0 + Rust edition 2021
+* .Net 9 + with Blazor WebAssembly Tool
+* WebView2 *(Windows)*
+* webkit2gtk *(Linux)*
+
+## Development
+Run `dotnet watch run --project src/Socketor.csproj`
+Run `cargo tauri dev` under the main directory to start the project.
 
 ## How To Build
-Run 'cargo tauri build' under the main directory to pack the executable file.
+Run `cargo tauri build` under the main directory to pack the executable file.
 
 ## Utilities
-|           |           |
-|  ----  | ----  |
-| WebSocket Client  | Finished |
-| WebSocket Server  | Plan |
-| TCP Client|  In Progress |
-| TCP Server|  In Progress |
-| UDP Client|  Plan |
+|                  |             |
+|------------------|-------------|
+| WebSocket Client | Finished    |
+| WebSocket Server | Plan        |
+| TCP Client       | In Progress |
+| TCP Server       | In Progress |
+| UDP Client       | Plan        |

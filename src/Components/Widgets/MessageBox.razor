@@ -1,0 +1,60 @@
+@using System.Text
+@using Microsoft.Extensions.Localization
+@using Socketor.DataModel
+@using Microsoft.AspNetCore.Components.Sections
+@using Socketor.DataModel.Configs
+@inject IStringLocalizer<MessageBox> Localizer
+@inject IJSRuntime JSRuntime
+
+<div class="message-box">
+    <div class="scroll" @ref="_scroll" style="height: 100%;">
+        <Virtualize TItem="MessageData" Context="msg" Items="_messageList">
+            <MessageItem MessageData="msg"/>
+        </Virtualize>
+    </div>
+    @* <Scroll Height="100%"> *@
+    @* *@
+    @* </Scroll> *@
+</div>
+
+<SectionContent SectionName="@ConfigSectionName">
+    <Card HeaderText="@Localizer["ReceiveSettings"]" IsCollapsible="true">
+        <BodyTemplate>
+            <div class="config-list">
+                @* TODO: 内容显示设置 *@
+                <Checkbox TValue="bool" IsDisabled="true" DisplayText="Show As Hex" ShowAfterLabel="true"/>
+            </div>
+        </BodyTemplate>
+    </Card>
+</SectionContent>
+
+
+
+@code {
+
+    /// <summary>
+    /// The name of the configuration section to which this component belongs.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required string ConfigSectionName { get; set; }
+
+    [Parameter, EditorRequired] public required MessageBoxConfig MessageBoxConfig { get; set; }
+
+    private readonly List<MessageData> _messageList = [];
+
+    public void AddMessage(MessageData message)
+    {
+        _messageList.Add(message);
+        StateHasChanged();
+        ScrollToBottom();
+    }
+
+    private ElementReference _scroll;
+
+    private void ScrollToBottom()
+    {
+        var jsInProcess = (IJSInProcessRuntime)JSRuntime;
+        jsInProcess.InvokeVoid("scrollToBottom", _scroll);
+    }
+
+}

@@ -1,0 +1,159 @@
+@using System.Text
+@using Microsoft.AspNetCore.Components.Sections
+@using Microsoft.Extensions.Localization
+@using Socketor.DataModel
+@using Socketor.DataModel.Configs
+
+@inject IStringLocalizer<SendBox> Localizer
+@inject ToastService ToastService
+
+<BootstrapInputGroup>
+    <Textarea style="flex-grow: 1; resize: none" @bind-Value="@_inputText" UseShiftEnter="true"
+              OnEnterAsync="SendMessageConfirmed"></Textarea>
+    <Button Icon="fa-solid fa-paper-plane" IsDisabled="@Disabled()"
+            OnClick="SendInputTextMessage"></Button>
+</BootstrapInputGroup>
+
+<SectionContent SectionName="@ConfigSectionName">
+    <Card HeaderText="@Localizer["SendSettings"]" IsCollapsible="true">
+        <BodyTemplate>
+            <div class="config-list">
+                <div>@Localizer["ContinuousSending"]</div>
+                <BootstrapInputGroup>
+                    <BootstrapInputGroupLabel DisplayText="@Localizer["Interval"]"/>
+                    <BootstrapInputNumber TValue="int" IsDisabled="@DisabledWhenSending()"
+                                          @bind-Value="SendBoxConfig.SendInterval"/>
+                    <BootstrapInputGroupLabel DisplayText="ms"/>
+                </BootstrapInputGroup>
+                <Button Text="@SendButtonText()" IsDisabled="@Disabled()"
+                        OnClick="ChangeSendingStateClick"></Button>
+                <Divider/>
+                <Checkbox TValue="bool" @bind-Value="SendBoxConfig.KeepInputText"
+                          DisplayText="@Localizer["KeepInputText"]"
+                          ShowAfterLabel="true"/>
+            </div>
+        </BodyTemplate>
+    </Card>
+</SectionContent>
+
+@code {
+
+    /// <summary>
+    /// The name of the configuration section to which this component belongs.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required string ConfigSectionName { get; set; }
+
+    [Parameter, EditorRequired] public required SendBoxConfig SendBoxConfig { get; set; }
+
+    private string _inputText = "";
+
+    [Parameter] public EventCallback<MessageData> OnMessageSend { get; set; }
+
+    /// <summary>
+    /// Is connection enabled.
+    /// </summary>
+    [Parameter]
+    public bool Enabled { get; set; }
+
+    // 是否禁用
+    private bool Disabled() => !Enabled;
+
+    // 仅在发送时禁用
+    private bool DisabledWhenSending() => _sending;
+
+    private async Task SendInputTextMessage() => await SendMessageConfirmed(_inputText);
+
+    private async Task SendMessageConfirmed(string text)
+    {
+        if (!Enabled || string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+
+        var message = new MessageData(MessageOwner.Send, Encoding.UTF8.GetBytes(text));
+        if (!SendBoxConfig.KeepInputText)
+        {
+            _inputText = "";
+        }
+
+        await OnMessageSend.InvokeAsync(message);
+    }
+
+    #region Continuous Sending
+
+    private bool _sending;
+    private CancellationTokenSource? _continuousSendingTokenSource;
+    private Task? _continuousSendingTask;
+
+    private async Task ChangeSendingStateClick()
+    {
+        if (_sending)
+        {
+            await StopContinuousSending();
+        }
+        else
+        {
+            _continuousSendingTask = StartContinuousSending();
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task StartContinuousSending()
+    {
+        _sending = true;
+        _continuousSendingTokenSource = new CancellationTokenSource();
+        var token = _continuousSendingTokenSource.Token;
+        var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(SendBoxConfig.SendInterval));
+
+        // cache the message
+        var text = _inputText;
+
+        try
+        {
+            do
+            {
+                var message = new MessageData(MessageOwner.Send, Encoding.UTF8.GetBytes(text));
+                await OnMessageSend.InvokeAsync(message);
+            } while (!token.IsCancellationRequested && Enabled && await timer.WaitForNextTickAsync(token));
+        }
+        catch (OperationCanceledException)
+        {
+            // Operation was canceled
+        }
+        catch (Exception e)
+        {
+            await ToastService.Error(Localizer["ContinuousSendError"], e.Message);
+        }
+        finally
+        {
+            _continuousSendingTokenSource?.Dispose();
+            _continuousSendingTokenSource = null;
+            _sending = false;
+        }
+    }
+
+    private async Task StopContinuousSending()
+    {
+        if (_continuousSendingTokenSource != null)
+        {
+            await _continuousSendingTokenSource.CancelAsync();
+        }
+
+        if (_continuousSendingTask != null)
+        {
+            await _continuousSendingTask;
+            _continuousSendingTask = null;
+        }
+
+        _sending = false;
+    }
+
+    private string SendButtonText() =>
+        _sending ? Localizer["StopSending"] : Localizer["StartSending"];
+
+    #endregion
+
+
+}

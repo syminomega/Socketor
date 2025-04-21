@@ -1,0 +1,39 @@
+.ws-client-main {
+    /*分为左右两部分*/
+    display: grid;
+    grid-template-columns: 1fr 16rem;
+    position: relative;
+    height: 100%;
+}
+
+/*左侧*/
+.ws-client-left {
+    grid-column: 1;
+    padding-right: 8px;
+}
+
+/*右侧*/
+.ws-client-right-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-right: 4px;
+}
+
+/*左侧上方*/
+.ws-client-left-top {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-bottom: 8px;
+    gap: 4px;
+}
+
+/*左侧下方*/
+.ws-client-left-bottom {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    padding-top: 8px;
+    align-items: stretch;
+}

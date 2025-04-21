@@ -1,0 +1,77 @@
+
+
+.message-item {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    margin: 8px;
+    border: 1px solid;
+    border-radius: 4px;
+}
+
+.message-header {
+    grid-row: 1;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+
+    font-size: 0.7rem;
+    padding: 0.1rem 0.5rem;
+
+}
+
+.message-body {
+    grid-row: 2;
+
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+
+    padding: 0.3rem 0.5rem;
+    background-color: var(--content-background);
+}
+
+.message-border-send {
+    border: 1px solid rgba(var(--color-success), var(--message-background-opacity));
+}
+
+.message-background-send {
+    background-color: rgba(var(--color-success), var(--message-background-opacity));
+}
+
+.message-border-receive {
+    border: 1px solid rgba(var(--color-primary), var(--message-background-opacity));
+}
+
+.message-background-receive {
+    background-color: rgba(var(--color-primary), var(--message-background-opacity));
+}
+
+.message-border-info {
+    border: 1px solid rgba(var(--color-info), var(--message-background-opacity));
+}
+
+.message-background-info {
+    background-color: rgba(var(--color-info), var(--message-background-opacity));
+}
+
+.message-border-error {
+    border: 1px solid rgba(var(--color-danger), var(--message-background-opacity));
+}
+
+.message-background-error {
+    background-color: rgba(var(--color-danger), var(--message-background-opacity));
+}
+
+.message-border-warning {
+    border: 1px solid rgba(var(--color-warning), var(--message-background-opacity));
+}
+
+.message-background-warning {
+    background-color: rgba(var(--color-warning), var(--message-background-opacity));
+}
+
+.message-border-default {
+    border: 1px solid rgba(var(--color-secondary), var(--message-background-opacity));
+}
+
+.message-background-default {
+    background-color: rgba(var(--color-secondary), var(--message-background-opacity));
+}

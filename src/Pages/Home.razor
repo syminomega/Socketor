@@ -1,0 +1,36 @@
+﻿@page "/"
+@using Microsoft.Extensions.Localization
+@using Socketor.Components
+@using Socketor.Components.Widgets
+@inject IThemeProvider ThemeProvider
+@inject IStringLocalizer<Home> Localizer
+
+<div class="main-container">
+    <Tab TabStyle="TabStyle.Chrome" ShowToolbar="true"
+         ShowRefreshToolbarButton="false" ShowFullscreenToolbarButton="false">
+        <ChildContent>
+            <TabItem Text="@Localizer["WebSocketClient"]">
+                <WebSocketClientComp></WebSocketClientComp>
+            </TabItem>
+            <TabItem Text="@Localizer["WebSocketServer"]">Work in progress</TabItem>
+            <TabItem Text="@Localizer["TCPClient"]">Work in progress</TabItem>
+            <TabItem Text="@Localizer["TCPServer"]">Work in progress</TabItem>
+            <TabItem Text="@Localizer["UDPClient"]">Work in progress</TabItem>
+        </ChildContent>
+        <ToolbarTemplate>
+            <TabToolbarButton Icon="fa-regular fa-square-plus"
+                              TooltipText="@Localizer["CreateNewInstance"]"></TabToolbarButton>
+            <AppSettingsPopover></AppSettingsPopover>
+        </ToolbarTemplate>
+    </Tab>
+</div>
+
+@code
+{
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await ThemeProvider.SetThemeAsync("auto");
+    }
+
+}

@@ -1,0 +1,19 @@
+.main-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+::deep > * {
+    height: 100%;
+}
+
+::deep > .tabs-top > .tabs-header {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+::deep > .tabs-top > .tabs-body > .tabs-body-content {
+    position: relative;
+    height: 100%;
+}

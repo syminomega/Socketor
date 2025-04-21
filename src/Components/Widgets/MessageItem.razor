@@ -1,0 +1,28 @@
+@using System.Text
+@using Socketor.DataModel
+
+<div class="message-item @GetBorderColorClass()">
+    <div class="message-header @GetBackgroundColorClass()">@MessageData.Time</div>
+    <div class="message-body">@GetMessageAsString()</div>
+</div>
+
+
+
+@code {
+    [Parameter, EditorRequired] public required MessageData MessageData { get; set; }
+
+    private string GetMessageAsString()
+    {
+        return Encoding.UTF8.GetString(MessageData.RawMessage);
+    }
+
+    private string GetBorderColorClass()
+    {
+        return $"message-border-{MessageData.MessageOwner.ToDescriptionString()}";
+    }
+    
+    private string GetBackgroundColorClass()
+    {
+        return $"message-background-{MessageData.MessageOwner.ToDescriptionString()}";
+    }
+}

@@ -1,0 +1,53 @@
+@using Microsoft.Extensions.Localization
+@using Socketor.Utilities
+@using Console = System.Console
+@inject IStringLocalizer<AppSettingsPopover> Localizer
+@inject CultureService CultureService
+@inject IJSRuntime JsRuntime
+
+<Popover IsHtml="true" Title="@Localizer["AppSettings"]" Trigger="click">
+    <ChildContent>
+        <TabToolbarButton style="height: 33px" Icon="fa-solid fa-sliders"></TabToolbarButton>
+    </ChildContent>
+    <Template>
+        <div class="config-list">
+            <BootstrapInputGroup>
+                <BootstrapInputGroupIcon style="width: 80px; font-size: 20px" Icon="fa-solid fa-language"/>
+                <Select @ref="_languageSelect" TValue="string" Items="_languages" @bind-Value="_currentLanguage"
+                        OnSelectedItemChanged="OnSelectedLanguageChanged"></Select>
+            </BootstrapInputGroup>
+            <div>@Localizer["NeedsRestart"]</div>
+            <div class="theme-select">
+                <div class="input-group-text theme-select-label" style="width: 80px">@Localizer["Theme"]</div>
+                <div class="theme-select-select">
+                    <ThemeProvider></ThemeProvider>
+                </div>
+            </div>
+        </div>
+    </Template>
+</Popover>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentLanguage = await CultureService.GetCurrentCulture() ?? "en-US";
+        await base.OnInitializedAsync();
+    }
+
+    private readonly List<SelectedItem> _languages =
+    [
+        new("en-US", "English(US)"),
+        new("zh-CN", "简体中文")
+    ];
+
+    private string? _currentLanguage;
+    private Select<string>? _languageSelect;
+
+    private async Task OnSelectedLanguageChanged(SelectedItem selectedLanguage)
+    {
+        await CultureService.SetCurrentCulture(selectedLanguage.Value);
+        StateHasChanged();
+    }
+
+}
