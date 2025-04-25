@@ -17,27 +17,3 @@ handleThemeChange(darkModeMediaQuery);
 
 // 监听主题切换
 darkModeMediaQuery.addEventListener("change", handleThemeChange);
-
-// 平滑滚动到div底部
-// function scrollToBottom(element) {
-//     element.scrollTop = element.scrollHeight;
-// }
-function scrollToBottom(element) {
-    const start = element.scrollTop;
-    const end = element.scrollHeight;
-    const distance = end - start;
-    const duration = 500; // 动画持续时间（毫秒）
-    const startTime = performance.now();
-
-    function scrollStep(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1); // 确保进度不超过1
-        element.scrollTop = start + distance * progress;
-
-        if (progress < 1) {
-            window.requestAnimationFrame(scrollStep);
-        }
-    }
-
-    window.requestAnimationFrame(scrollStep);
-}

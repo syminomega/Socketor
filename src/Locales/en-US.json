@@ -22,6 +22,7 @@
     "KeepInputText": "Keep Input Text"
   },
   "Socketor.Components.Widgets.MessageBox": {
+    "MaxEntries": "Max Entries",
     "ReceiveSettings": "Receive Settings"
   },
   "Socketor.Components.WebSocketClientComp": {

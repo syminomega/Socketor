@@ -21,7 +21,7 @@
                 <div>@Localizer["ContinuousSending"]</div>
                 <BootstrapInputGroup>
                     <BootstrapInputGroupLabel DisplayText="@Localizer["Interval"]"/>
-                    <BootstrapInputNumber TValue="int" IsDisabled="@DisabledWhenSending()"
+                    <BootstrapInputNumber TValue="int" Min="10" IsDisabled="@DisabledWhenSending()"
                                           @bind-Value="SendBoxConfig.SendInterval"/>
                     <BootstrapInputGroupLabel DisplayText="ms"/>
                 </BootstrapInputGroup>
