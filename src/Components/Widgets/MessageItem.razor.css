@@ -35,7 +35,8 @@
 }
 
 .scroll-content {
-    overflow-y: auto;
+    overflow-y: hidden;
+    overflow-x: scroll;
 }
 
 .message-border-send {
