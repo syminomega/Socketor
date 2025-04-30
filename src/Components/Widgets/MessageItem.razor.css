@@ -28,6 +28,16 @@
     background-color: var(--content-background);
 }
 
+.warp-content {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.scroll-content {
+    overflow-y: auto;
+}
+
 .message-border-send {
     border: 1px solid rgba(var(--color-success), var(--message-background-opacity));
 }

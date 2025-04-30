@@ -23,7 +23,8 @@
   },
   "Socketor.Components.Widgets.MessageBox": {
     "MaxEntries": "最大条目数",
-    "ReceiveSettings": "接收设置"
+    "ReceiveSettings": "接收设置",
+    "AutoWarp": "自动换行"
   },
   "Socketor.Components.WebSocketClientComp": {
     "WebSocketAddress": "WebSocket 地址",

@@ -5,11 +5,13 @@
 @inject IStringLocalizer<MessageBox> Localizer
 
 <div class="message-box">
-    <Scroll @ref="_scroll" Height="100%">
-        <Virtualize TItem="MessageData" Context="msg" Items="_messageList">
-            <MessageItem MessageData="msg"/>
-        </Virtualize>
-    </Scroll>
+    <CascadingValue TValue="MessageBoxConfig" Name="@nameof(MessageItem.MessageBoxConfig)" Value="MessageBoxConfig">
+        <Scroll @ref="_scroll" Height="100%">
+            <Virtualize TItem="MessageData" Context="msg" Items="_messageList">
+                <MessageItem MessageData="msg"/>
+            </Virtualize>
+        </Scroll>
+    </CascadingValue>
 </div>
 
 <SectionContent SectionName="@ConfigSectionName">
@@ -22,6 +24,8 @@
                 </BootstrapInputGroup>
                 @* TODO: 内容显示设置 *@
                 <Checkbox TValue="bool" IsDisabled="true" DisplayText="Show As Hex" ShowAfterLabel="true"/>
+                <Checkbox TValue="bool" @bind-Value="MessageBoxConfig.AutoWarp" DisplayText="@Localizer["AutoWarp"]"
+                          ShowAfterLabel="true"/>
             </div>
         </BodyTemplate>
     </Card>
@@ -41,13 +45,12 @@
 
     private readonly List<MessageData> _messageList = [];
 
-
     public void AddMessage(MessageData message)
     {
         _messageList.Add(message);
         StateHasChanged();
         _scroll?.ScrollToBottom();
-        
+
         while (_messageList.Count > MessageBoxConfig.MaxEntries)
         {
             _messageList.RemoveAt(0);

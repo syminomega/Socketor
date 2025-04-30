@@ -1,15 +1,24 @@
 @using System.Text
 @using Socketor.DataModel
+@using Socketor.DataModel.Configs
 
 <div class="message-item @GetBorderColorClass()">
     <div class="message-header @GetBackgroundColorClass()">@MessageData.Time</div>
-    <div class="message-body">@GetMessageAsString()</div>
+    <div class="message-body @GetWarpClass()">@GetMessageAsString()</div>
 </div>
 
 
 
 @code {
     [Parameter, EditorRequired] public required MessageData MessageData { get; set; }
+
+    [CascadingParameter(Name=nameof(MessageBoxConfig))]
+    public MessageBoxConfig? MessageBoxConfig { get; set; }
+
+    private string GetWarpClass()
+    {
+        return MessageBoxConfig is { AutoWarp: true } ? "warp-content" : "scroll-content";
+    }
 
     private string GetMessageAsString()
     {
@@ -20,9 +29,10 @@
     {
         return $"message-border-{MessageData.MessageOwner.ToDescriptionString()}";
     }
-    
+
     private string GetBackgroundColorClass()
     {
         return $"message-background-{MessageData.MessageOwner.ToDescriptionString()}";
     }
+
 }

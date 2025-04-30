@@ -23,7 +23,8 @@
   },
   "Socketor.Components.Widgets.MessageBox": {
     "MaxEntries": "Max Entries",
-    "ReceiveSettings": "Receive Settings"
+    "ReceiveSettings": "Receive Settings",
+    "AutoWarp": "Auto Wrap"
   },
   "Socketor.Components.WebSocketClientComp": {
     "WebSocketAddress": "WebSocket Address",
