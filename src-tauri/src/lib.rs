@@ -3,7 +3,7 @@ use websocket_server::{
     WebSocketServerManager, start_websocket_server, stop_websocket_server, 
     send_websocket_message, get_websocket_servers, get_websocket_server_info
 };
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use tauri::Manager;
 
 mod socketor_tcp_server;

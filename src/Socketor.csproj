@@ -17,10 +17,4 @@
       <Content Remove="Locales\*" />
       <EmbeddedResource Include="Locales\*" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Flux\Actions\" />
-      <Folder Include="Flux\Effects\" />
-      <Folder Include="Flux\Feature\" />
-      <Folder Include="Flux\Reducers\" />
-    </ItemGroup>
 </Project>

@@ -45,5 +45,23 @@
     "StopReceivingMessage": "Stop receiving message",
     "SendingCanceled": "Message Sending Canceled",
     "SendFailed": "Message Sending Failed"
+  },
+  "Socketor.Components.WebSocketServerComp": {
+    "ServerAddress": "Server Address",
+    "Host": "Host",
+    "Port": "Port", 
+    "Start": "Start",
+    "Stop": "Stop",
+    "ServerSettings": "Server Settings",
+    "ServerStatus": "Server Status",
+    "ConnectedClients": "Connected Clients",
+    "ServerId": "Server ID",
+    "ServerStarted": "Server Started",
+    "ServerStopped": "Server Stopped",
+    "StartServerFailed": "Failed to Start Server",
+    "StopServerFailed": "Failed to Stop Server",
+    "ServerNotRunning": "Server Not Running",
+    "SendFailed": "Message Sending Failed",
+    "GetServerStatusFailed": "Failed to Get Server Status"
   }
 }

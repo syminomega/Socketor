@@ -45,5 +45,23 @@
     "StopReceivingMessage": "停止接收消息",
     "SendingCanceled": "消息发送已取消",
     "SendFailed": "消息发送失败"
+  },
+  "Socketor.Components.WebSocketServerComp": {
+    "ServerAddress": "服务器地址",
+    "Host": "主机",
+    "Port": "端口",
+    "Start": "启动",
+    "Stop": "停止", 
+    "ServerSettings": "服务器设置",
+    "ServerStatus": "服务器状态",
+    "ConnectedClients": "已连接客户端",
+    "ServerId": "服务器ID",
+    "ServerStarted": "服务器已启动",
+    "ServerStopped": "服务器已停止",
+    "StartServerFailed": "启动服务器失败",
+    "StopServerFailed": "停止服务器失败",
+    "ServerNotRunning": "服务器未运行",
+    "SendFailed": "消息发送失败",
+    "GetServerStatusFailed": "获取服务器状态失败"
   }
 }

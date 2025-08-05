@@ -3,12 +3,13 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{State, Manager, Emitter};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, Mutex, RwLock};
 use tokio::task::JoinHandle;
 use tokio_tungstenite::{accept_async, tungstenite::Message};
 use uuid::Uuid;
+use chrono;
 
 // WebSocket客户端连接
 #[allow(dead_code)]
@@ -22,9 +23,11 @@ pub struct WebSocketClient {
 pub struct WebSocketServer {
     pub host: String,
     pub port: u16,
+    pub server_id: String,
     pub clients: Arc<RwLock<HashMap<String, WebSocketClient>>>,
     pub server_handle: Option<JoinHandle<()>>,
     pub shutdown_sender: Option<mpsc::UnboundedSender<()>>,
+    pub app_handle: Option<tauri::AppHandle>,
 }
 
 // WebSocket服务器管理器
@@ -38,8 +41,10 @@ impl WebSocketServerManager {
             servers: HashMap::new(),
         }
     }
+}
 
-    pub fn default() -> Self {
+impl Default for WebSocketServerManager {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -70,15 +75,31 @@ pub struct ServerInfo {
     pub is_running: bool,
 }
 
+// WebSocket事件数据（发送给前端）
+#[derive(Serialize, Deserialize, Clone)]
+pub struct WebSocketServerEvent {
+    pub server_id: String,
+    pub event_type: String,
+    pub client_id: String,
+    pub message: String,
+    pub timestamp: String,
+}
+
 impl WebSocketServer {
-    pub fn new(host: String, port: u16) -> Self {
+    pub fn new(host: String, port: u16, server_id: String) -> Self {
         WebSocketServer {
             host,
             port,
+            server_id,
             clients: Arc::new(RwLock::new(HashMap::new())),
             server_handle: None,
             shutdown_sender: None,
+            app_handle: None,
         }
+    }
+
+    pub fn set_app_handle(&mut self, app_handle: tauri::AppHandle) {
+        self.app_handle = Some(app_handle);
     }
 
     pub async fn start(&mut self) -> Result<(), String> {
@@ -88,6 +109,8 @@ impl WebSocketServer {
             .map_err(|e| format!("Failed to bind to {}: {}", addr, e))?;
 
         let clients = Arc::clone(&self.clients);
+        let app_handle = self.app_handle.clone();
+        let server_id = self.server_id.clone();
         let (shutdown_tx, mut shutdown_rx) = mpsc::unbounded_channel();
         self.shutdown_sender = Some(shutdown_tx);
 
@@ -104,7 +127,9 @@ impl WebSocketServer {
                         match accept_result {
                             Ok((stream, addr)) => {
                                 let clients_clone = Arc::clone(&clients);
-                                tokio::spawn(handle_connection(stream, addr, clients_clone));
+                                let app_handle_clone = app_handle.clone();
+                                let server_id_clone = server_id.clone();
+                                tokio::spawn(handle_connection(stream, addr, clients_clone, app_handle_clone, server_id_clone));
                             }
                             Err(e) => {
                                 eprintln!("Failed to accept connection: {}", e);
@@ -180,6 +205,8 @@ async fn handle_connection(
     stream: TcpStream,
     addr: SocketAddr,
     clients: Arc<RwLock<HashMap<String, WebSocketClient>>>,
+    app_handle: Option<tauri::AppHandle>,
+    server_id: String,
 ) {
     let ws_stream = match accept_async(stream).await {
         Ok(ws) => ws,
@@ -191,6 +218,21 @@ async fn handle_connection(
 
     let client_id = Uuid::new_v4().to_string();
     println!("New WebSocket client connected: {} ({})", client_id, addr);
+
+    // 发送客户端连接事件到前端
+    if let Some(ref app) = app_handle {
+        let event = WebSocketServerEvent {
+            server_id: server_id.clone(),
+            event_type: "client_connected".to_string(),
+            client_id: client_id.clone(),
+            message: format!("Client connected from {}", addr),
+            timestamp: chrono::Utc::now().to_rfc3339(),
+        };
+        
+        if let Err(e) = app.emit("websocket-server-event", &event) {
+            eprintln!("Failed to emit connection event to frontend: {}", e);
+        }
+    }
 
     let (mut ws_sender, mut ws_receiver) = ws_stream.split();
     let (tx, mut rx) = mpsc::unbounded_channel::<Message>();
@@ -220,18 +262,64 @@ async fn handle_connection(
     // 接收消息循环
     let client_id_clone2 = client_id.clone();
     let clients_clone = Arc::clone(&clients);
+    let app_handle_clone = app_handle.clone();
+    let server_id_clone = server_id.clone();
     let receive_task = tokio::spawn(async move {
         while let Some(msg) = ws_receiver.next().await {
             match msg {
                 Ok(Message::Text(text)) => {
                     println!("Received from {}: {}", client_id_clone2, text);
-                    // 这里可以处理收到的消息，比如回显或者转发给其他客户端
+                    
+                    // 发送事件到前端
+                    if let Some(ref app) = app_handle_clone {
+                        let event = WebSocketServerEvent {
+                            server_id: server_id_clone.clone(),
+                            event_type: "message_received".to_string(),
+                            client_id: client_id_clone2.clone(),
+                            message: text.clone(),
+                            timestamp: chrono::Utc::now().to_rfc3339(),
+                        };
+                        
+                        if let Err(e) = app.emit("websocket-server-event", &event) {
+                            eprintln!("Failed to emit event to frontend: {}", e);
+                        }
+                    }
                 }
                 Ok(Message::Binary(bin)) => {
                     println!("Received binary data from {}: {} bytes", client_id_clone2, bin.len());
+                    
+                    // 发送二进制数据事件到前端
+                    if let Some(ref app) = app_handle_clone {
+                        let event = WebSocketServerEvent {
+                            server_id: server_id_clone.clone(),
+                            event_type: "binary_received".to_string(),
+                            client_id: client_id_clone2.clone(),
+                            message: format!("Binary data: {} bytes", bin.len()),
+                            timestamp: chrono::Utc::now().to_rfc3339(),
+                        };
+                        
+                        if let Err(e) = app.emit("websocket-server-event", &event) {
+                            eprintln!("Failed to emit event to frontend: {}", e);
+                        }
+                    }
                 }
                 Ok(Message::Close(_)) => {
                     println!("Client {} disconnected", client_id_clone2);
+                    
+                    // 发送客户端断开事件到前端
+                    if let Some(ref app) = app_handle_clone {
+                        let event = WebSocketServerEvent {
+                            server_id: server_id_clone.clone(),
+                            event_type: "client_disconnected".to_string(),
+                            client_id: client_id_clone2.clone(),
+                            message: "Client disconnected".to_string(),
+                            timestamp: chrono::Utc::now().to_rfc3339(),
+                        };
+                        
+                        if let Err(e) = app.emit("websocket-server-event", &event) {
+                            eprintln!("Failed to emit event to frontend: {}", e);
+                        }
+                    }
                     break;
                 }
                 Err(e) => {
@@ -260,6 +348,7 @@ async fn handle_connection(
 // Tauri命令：启动WebSocket服务器
 #[tauri::command]
 pub async fn start_websocket_server(
+    app_handle: tauri::AppHandle,
     params: StartServerParams,
     state: State<'_, Mutex<WebSocketServerManager>>,
 ) -> Result<String, String> {
@@ -271,7 +360,8 @@ pub async fn start_websocket_server(
         return Err(format!("Server with ID {} already exists", server_id));
     }
 
-    let mut server = WebSocketServer::new(params.host.clone(), params.port);
+    let mut server = WebSocketServer::new(params.host.clone(), params.port, server_id.clone());
+    server.set_app_handle(app_handle);
     server.start().await?;
 
     manager.servers.insert(server_id.clone(), server);
@@ -281,9 +371,15 @@ pub async fn start_websocket_server(
 // Tauri命令：停止WebSocket服务器
 #[tauri::command]
 pub async fn stop_websocket_server(
-    server_id: String,
+    server_id: Option<String>,
     state: State<'_, Mutex<WebSocketServerManager>>,
 ) -> Result<(), String> {
+    let server_id = server_id.ok_or("Server ID is required")?;
+    
+    if server_id.is_empty() {
+        return Err("Server ID cannot be empty".to_string());
+    }
+    
     let mut manager = state.lock().await;
 
     if let Some(server) = manager.servers.get_mut(&server_id) {
@@ -301,6 +397,14 @@ pub async fn send_websocket_message(
     params: SendMessageParams,
     state: State<'_, Mutex<WebSocketServerManager>>,
 ) -> Result<String, String> {
+    if params.server_id.is_empty() {
+        return Err("Server ID cannot be empty".to_string());
+    }
+    
+    if params.message.is_empty() {
+        return Err("Message cannot be empty".to_string());
+    }
+    
     let manager = state.lock().await;
 
     if let Some(server) = manager.servers.get(&params.server_id) {
@@ -342,9 +446,15 @@ pub async fn get_websocket_servers(
 // Tauri命令：获取特定服务器信息
 #[tauri::command]
 pub async fn get_websocket_server_info(
-    server_id: String,
+    server_id: Option<String>,
     state: State<'_, Mutex<WebSocketServerManager>>,
 ) -> Result<ServerInfo, String> {
+    let server_id = server_id.ok_or("Server ID is required")?;
+    
+    if server_id.is_empty() {
+        return Err("Server ID cannot be empty".to_string());
+    }
+    
     let manager = state.lock().await;
 
     if let Some(server) = manager.servers.get(&server_id) {

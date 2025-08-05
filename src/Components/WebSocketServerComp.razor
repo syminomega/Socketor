@@ -1,0 +1,387 @@
+@using System.Text
+@using System.Text.Json
+@using Blazored.LocalStorage
+@using Microsoft.Extensions.Localization
+@using Socketor.Components.Widgets
+@using Socketor.DataModel.Configs
+@using Microsoft.AspNetCore.Components.Sections
+@using Socketor.DataModel
+@inject IStringLocalizer<WebSocketServerComp> Localizer
+@inject ILocalStorageService LocalStorage
+@inject ToastService ToastService
+@inject Tauri Tauri
+@implements IAsyncDisposable
+
+<div class="ws-server-main">
+    <div class="ws-server-left">
+        <Split IsVertical="true" Basis="65%" FirstPaneMinimumSize="200px" SecondPaneMinimumSize="80px">
+            <FirstPaneTemplate>
+                <div class="ws-server-left-top">
+                    <BootstrapInputGroup>
+                        <BootstrapInputGroupLabel
+                            DisplayText="@Localizer["ServerAddress"]"/>
+                        <Display TValue="string" Value="ServerAddressDisplay"/>
+                    </BootstrapInputGroup>
+                    <BootstrapInputGroup>
+                        <BootstrapInputGroupLabel
+                            DisplayText="@Localizer["Host"]"/>
+                        <BootstrapInput TValue="string" @bind-Value="Config.Host" Disabled="_isServerRunning"/>
+                        <BootstrapInputGroupLabel
+                            DisplayText="@Localizer["Port"]"/>
+                        <BootstrapInput TValue="int" @bind-Value="Config.Port" Disabled="_isServerRunning"/>
+                        <Button Text="@ServerButtonText()" Color="ServerButtonColor()"
+                                OnClick="ToggleServerStateClick" IsAsync="true"></Button>
+                    </BootstrapInputGroup>
+                    <MessageBox @ref="_messageBox" ConfigSectionName="@WsServerMsgBoxConfigSectionName"
+                                MessageBoxConfig="Config.MessageBoxConfig"/>
+                </div>
+            </FirstPaneTemplate>
+            <SecondPaneTemplate>
+                <div class="ws-server-left-bottom">
+                    <SendBox ConfigSectionName="@WsServerSendBoxConfigSectionName"
+                             SendBoxConfig="Config.SendBoxConfig" Enabled="_isServerRunning"
+                             OnMessageSend="OnMessageSend"/>
+                </div>
+            </SecondPaneTemplate>
+        </Split>
+    </div>
+
+    <div style="grid-column: 2; position: relative; width: calc(100% + 4px)">
+        <Scroll style="position: absolute;">
+            <div class="ws-server-right-container">
+                <Card HeaderText="@Localizer["ServerSettings"]" IsCollapsible="true">
+                    <BodyTemplate>
+                        <div class="config-list">
+                            <div>@Localizer["ServerStatus"]</div>
+                            <BootstrapInputGroup>
+                                <Display TValue="string" Value="_serverStatus"></Display>
+                                <Button Icon="fa-solid fa-rotate"
+                                        OnClick="RefreshServerStatus"></Button>
+                            </BootstrapInputGroup>
+                            
+                            <div>@Localizer["ConnectedClients"]</div>
+                            <BootstrapInputGroup>
+                                <Display TValue="string" Value="_clientCount.ToString()"></Display>
+                                <Button Icon="fa-solid fa-rotate"
+                                        OnClick="RefreshServerInfo"></Button>
+                            </BootstrapInputGroup>
+                            
+                            <div>@Localizer["ServerId"]</div>
+                            <Display TValue="string" Value="_currentServerId"></Display>
+                        </div>
+                    </BodyTemplate>
+                </Card>
+                <SectionOutlet SectionName="@WsServerMsgBoxConfigSectionName"/>
+                <SectionOutlet SectionName="@WsServerSendBoxConfigSectionName"/>
+            </div>
+        </Scroll>
+    </div>
+</div>
+
+@code {
+    private const string WsServerMsgBoxConfigSectionName = "WsServerMsgBoxConfig";
+    private const string WsServerSendBoxConfigSectionName = "WsServerSendBoxConfig";
+
+    private WebSocketServerConfig Config { get; set; } = new();
+    
+    private string _serverStatus = "Stopped";
+    private bool _isServerRunning = false;
+    private string _currentServerId = "";
+    private int _clientCount = 0;
+    private MessageBox? _messageBox;
+    
+    // Tauri事件监听器
+    private UnlistenFn? _unlistenServerMessage;
+
+    private string ServerAddressDisplay => $"ws://{Config.Host}:{Config.Port}";
+
+    private string ServerButtonText() =>
+        _isServerRunning ? Localizer["Stop"] : Localizer["Start"];
+
+    private Color ServerButtonColor() =>
+        _isServerRunning ? Color.Danger : Color.Success;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            // 加载存储的配置
+            var storedConfig = await LocalStorage.GetItemAsync<WebSocketServerConfig?>("WebSocketServerConfig");
+            if (storedConfig != null)
+            {
+                Config = storedConfig;
+                // 如果配置中有ServerId，设置为当前服务器ID
+                if (!string.IsNullOrEmpty(Config.ServerId))
+                {
+                    _currentServerId = Config.ServerId;
+                    // 尝试获取服务器状态
+                    await RefreshServerStatus();
+                }
+            }
+
+            // 监听来自Tauri后端的WebSocket事件
+            _unlistenServerMessage = await Tauri.Event.Listen<WebSocketServerEvent>("websocket-server-event", OnServerEventReceived);
+            
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshServerStatus()
+    {
+        if (string.IsNullOrEmpty(_currentServerId))
+        {
+            _serverStatus = "Stopped";
+            _isServerRunning = false;
+            _clientCount = 0;
+            return;
+        }
+
+        try
+        {
+            var serverInfo = await Tauri.Core.Invoke<ServerInfoResponse>("get_websocket_server_info", new { server_id = _currentServerId });
+            _serverStatus = serverInfo.IsRunning ? "Running" : "Stopped";
+            _clientCount = serverInfo.ClientCount;
+            _isServerRunning = serverInfo.IsRunning;
+        }
+        catch (Exception)
+        {
+            _serverStatus = "Stopped";
+            _isServerRunning = false;
+            _clientCount = 0;
+            // 服务器不存在，清理ServerId
+            _currentServerId = "";
+            Config.ServerId = "";
+            await SaveConfig();
+            await ToastService.Warning("Server not found", "Server status cleared");
+        }
+        
+        StateHasChanged();
+    }
+    
+    private async Task RefreshServerInfo()
+    {
+        await RefreshServerStatus();
+    }
+
+    private async Task ToggleServerStateClick()
+    {
+        await SaveConfig();
+        
+        if (_isServerRunning)
+        {
+            await StopServer();
+        }
+        else
+        {
+            await StartServer();
+        }
+        
+        await RefreshServerStatus();
+    }
+
+    private async Task StartServer()
+    {
+        try
+        {
+            var startParams = new StartServerRequest
+            {
+                Host = Config.Host,
+                Port = Config.Port,
+                ServerId = string.IsNullOrEmpty(Config.ServerId) ? null : Config.ServerId
+            };
+
+            _currentServerId = await Tauri.Core.Invoke<string>("start_websocket_server", new { @params = startParams });
+            Config.ServerId = _currentServerId;
+            
+            _isServerRunning = true;
+            _serverStatus = "Running";
+            
+            // 保存配置，确保ServerId被持久化
+            await SaveConfig();
+            
+            var startMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes($"{Localizer["ServerStarted"]} - ID: {_currentServerId}"));
+            _messageBox?.AddMessage(startMessage);
+            
+            await ToastService.Success(Localizer["ServerStarted"], $"Server ID: {_currentServerId}");
+        }
+        catch (Exception e)
+        {
+            _isServerRunning = false;
+            _serverStatus = "Error";
+            _currentServerId = "";
+            Config.ServerId = "";
+            await ToastService.Error(Localizer["StartServerFailed"], e.Message);
+        }
+    }
+
+    private async Task StopServer()
+    {
+        if (string.IsNullOrEmpty(_currentServerId))
+        {
+            await ToastService.Warning(Localizer["ServerNotRunning"]);
+            return;
+        }
+
+        try
+        {
+            await Tauri.Core.Invoke("stop_websocket_server", new { server_id = _currentServerId });
+            
+            _isServerRunning = false;
+            _serverStatus = "Stopped";
+            _clientCount = 0;
+            
+            var stopMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes(Localizer["ServerStopped"]));
+            _messageBox?.AddMessage(stopMessage);
+            
+            await ToastService.Success(Localizer["ServerStopped"]);
+            
+            // 只有在成功停止后才清空ID
+            _currentServerId = "";
+            Config.ServerId = "";
+        }
+        catch (Exception e)
+        {
+            await ToastService.Error(Localizer["StopServerFailed"], e.Message);
+            // 发生错误时不清空ID，可能服务器仍在运行
+        }
+    }
+
+    private async Task OnMessageSend(MessageData messageData)
+    {
+        if (!_isServerRunning || string.IsNullOrEmpty(_currentServerId))
+        {
+            await ToastService.Warning(Localizer["ServerNotRunning"]);
+            return;
+        }
+
+        try
+        {
+            var sendParams = new SendMessageRequest
+            {
+                ServerId = _currentServerId,
+                Message = Encoding.UTF8.GetString(messageData.RawMessage),
+                TargetClientId = null // 广播给所有客户端，可以扩展为支持指定客户端
+            };
+
+            var result = await Tauri.Core.Invoke<string>("send_websocket_message", new { @params = sendParams });
+            
+            _messageBox?.AddMessage(messageData);
+            
+            // 显示发送结果
+            var resultMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes(result));
+            _messageBox?.AddMessage(resultMessage);
+        }
+        catch (Exception e)
+        {
+            var errorMessage = $"{Localizer["SendFailed"]}: {e.Message}";
+            _messageBox?.AddMessage(new MessageData(MessageOwner.Error, Encoding.UTF8.GetBytes(errorMessage)));
+            await ToastService.Error(Localizer["SendFailed"], e.Message);
+        }
+    }
+
+    private async Task SaveConfig()
+    {
+        await LocalStorage.SetItemAsync("WebSocketServerConfig", Config);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // 清理事件监听器
+        if (_unlistenServerMessage != null)
+        {
+            await _unlistenServerMessage.Invoke();
+            _unlistenServerMessage = null;
+        }
+        
+        // 保存配置
+        await SaveConfig();
+    }
+
+    // Tauri请求和响应的数据类
+    private class StartServerRequest
+    {
+        public string Host { get; set; } = "";
+        public int Port { get; set; }
+        public string? ServerId { get; set; }
+    }
+
+    private class SendMessageRequest
+    {
+        public string ServerId { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string? TargetClientId { get; set; }
+    }
+
+    private class ServerInfoResponse
+    {
+        public string ServerId { get; set; } = "";
+        public string Host { get; set; } = "";
+        public int Port { get; set; }
+        public int ClientCount { get; set; }
+        public bool IsRunning { get; set; }
+    }
+
+    // WebSocket服务器事件数据
+    private class WebSocketServerEvent
+    {
+        public string ServerId { get; set; } = "";
+        public string EventType { get; set; } = "";
+        public string ClientId { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string Timestamp { get; set; } = "";
+    }
+
+    private Task OnServerEventReceived(WebSocketServerEvent serverEvent)
+    {
+        // 只处理当前服务器的事件
+        if (serverEvent.ServerId != _currentServerId)
+            return Task.CompletedTask;
+
+        // 根据事件类型处理不同的事件
+        var messageOwner = serverEvent.EventType switch
+        {
+            "client_connected" => MessageOwner.Info,
+            "client_disconnected" => MessageOwner.Info,
+            "message_received" => MessageOwner.Receive,
+            "binary_received" => MessageOwner.Receive,
+            _ => MessageOwner.Info
+        };
+
+        var displayMessage = serverEvent.EventType switch
+        {
+            "client_connected" => $"[{serverEvent.ClientId}] {serverEvent.Message}",
+            "client_disconnected" => $"[{serverEvent.ClientId}] {serverEvent.Message}",
+            "message_received" => $"[{serverEvent.ClientId}] {serverEvent.Message}",
+            "binary_received" => $"[{serverEvent.ClientId}] {serverEvent.Message}",
+            _ => serverEvent.Message
+        };
+
+        var messageData = new MessageData(messageOwner, Encoding.UTF8.GetBytes(displayMessage));
+        _messageBox?.AddMessage(messageData);
+
+        // 如果是客户端连接/断开事件，刷新客户端计数
+        if (serverEvent.EventType == "client_connected" || serverEvent.EventType == "client_disconnected")
+        {
+            InvokeAsync(RefreshServerInfo);
+        }
+
+        InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
+    // private class WebSocketServerMessage
+    // {
+    //     public string Message { get; set; } = string.Empty;
+    //     public string ClientId { get; set; } = string.Empty;
+    // }
+
+    // private Task OnServerEventReceived(WebSocketServerMessage message)
+    // {
+    //     // 处理从Tauri后端收到的WebSocket事件
+    //     var receivedMessage = new MessageData(MessageOwner.Receive, Encoding.UTF8.GetBytes($"From {message.ClientId}: {message.Message}"));
+    //     _messageBox?.AddMessage(receivedMessage);
+    //     InvokeAsync(StateHasChanged);
+    //     return Task.CompletedTask;
+    // }
+}
