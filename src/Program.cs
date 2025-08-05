@@ -1,6 +1,5 @@
 using Blazored.LocalStorage;
 using BootstrapBlazor.Components;
-using Fluxor;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Socketor;
@@ -25,7 +24,6 @@ builder.Services.Configure<BootstrapBlazorOptions>(op =>
 });
 
 builder.Services.AddBlazoredLocalStorageAsSingleton();
-builder.Services.AddFluxor(options => options.ScanAssemblies(typeof(Program).Assembly));
 
 var host = builder.Build();
 await host.InitCultureAsync();
