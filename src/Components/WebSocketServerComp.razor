@@ -1,5 +1,4 @@
 @using System.Text
-@using System.Text.Json
 @using Blazored.LocalStorage
 @using Microsoft.Extensions.Localization
 @using Socketor.Components.Widgets
@@ -30,7 +29,7 @@
                             DisplayText="@Localizer["Port"]"/>
                         <BootstrapInput TValue="int" @bind-Value="Config.Port" Disabled="_isServerRunning"/>
                         <Button Text="@ServerButtonText()" Color="ServerButtonColor()"
-                                OnClick="ToggleServerStateClick" IsAsync="true"></Button>
+                                OnClick="@ToggleServerStateClick" IsAsync="true"></Button>
                     </BootstrapInputGroup>
                     <MessageBox @ref="_messageBox" ConfigSectionName="@WsServerMsgBoxConfigSectionName"
                                 MessageBoxConfig="Config.MessageBoxConfig"/>
@@ -45,7 +44,7 @@
             </SecondPaneTemplate>
         </Split>
     </div>
-
+    
     <div style="grid-column: 2; position: relative; width: calc(100% + 4px)">
         <Scroll style="position: absolute;">
             <div class="ws-server-right-container">
@@ -56,14 +55,14 @@
                             <BootstrapInputGroup>
                                 <Display TValue="string" Value="_serverStatus"></Display>
                                 <Button Icon="fa-solid fa-rotate"
-                                        OnClick="RefreshServerStatus"></Button>
+                                        OnClick="@RefreshServerStatus"></Button>
                             </BootstrapInputGroup>
                             
                             <div>@Localizer["ConnectedClients"]</div>
                             <BootstrapInputGroup>
                                 <Display TValue="string" Value="_clientCount.ToString()"></Display>
                                 <Button Icon="fa-solid fa-rotate"
-                                        OnClick="RefreshServerInfo"></Button>
+                                        OnClick="@RefreshServerInfo"></Button>
                             </BootstrapInputGroup>
                             
                             <div>@Localizer["ServerId"]</div>
@@ -85,9 +84,9 @@
     private WebSocketServerConfig Config { get; set; } = new();
     
     private string _serverStatus = "Stopped";
-    private bool _isServerRunning = false;
+    private bool _isServerRunning;
     private string _currentServerId = "";
-    private int _clientCount = 0;
+    private int _clientCount;
     private MessageBox? _messageBox;
     
     // Tauri事件监听器

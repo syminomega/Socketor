@@ -20,7 +20,7 @@
                             DisplayText="@Localizer["WebSocketAddress"]"/>
                         <BootstrapInput TValue="string" @bind-Value="Config.WebSocketAddress"/>
                         <Button Text="@ConnectButtonText()" Color="ConnectButtonColor()"
-                                OnClick="ChangeConnectStateClick" IsAsync="true"></Button>
+                                OnClick="@ChangeConnectStateClick" IsAsync="true"></Button>
                     </BootstrapInputGroup>
                     <MessageBox @ref="_messageBox" ConfigSectionName="@WsClientMsgBoxConfigSectionName"
                                 MessageBoxConfig="Config.MessageBoxConfig"/>
@@ -47,7 +47,7 @@
                             <BootstrapInputGroup>
                                 <Display TValue="string" Value="_connectionState"></Display>
                                 <Button Icon="fa-solid fa-rotate"
-                                        OnClick="RefreshWebSocketState"></Button>
+                                        OnClick="@RefreshWebSocketState"></Button>
                             </BootstrapInputGroup>
                         </div>
                     </BodyTemplate>
@@ -71,7 +71,7 @@
 
     private string _connectionState = "Unknown";
 
-    private bool _isConnected = false;
+    private bool _isConnected;
 
     // ws client instance
     private ClientWebSocket _webSocket = new();

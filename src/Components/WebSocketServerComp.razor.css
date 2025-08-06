@@ -1,45 +1,39 @@
 .ws-server-main {
+    /*分为左右两部分*/
     display: grid;
-    grid-template-columns: 1fr 400px;
-    grid-template-rows: 1fr;
-    gap: 4px;
+    grid-template-columns: 1fr 16rem;
+    position: relative;
     height: 100%;
 }
 
+/*左侧*/
 .ws-server-left {
+    grid-column: 1;
+    padding-right: 8px;
     display: flex;
     flex-direction: column;
-    height: 100%;
 }
 
 .ws-server-left-top {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 8px;
+    gap: 4px;
+    padding-bottom: 8px;
     height: 100%;
 }
 
 .ws-server-left-bottom {
-    padding: 8px;
+    display: flex;
+    flex-direction: row;
     height: 100%;
+    padding-top: 8px;
+    align-items: stretch;
 }
 
+/*右侧*/
 .ws-server-right-container {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 8px;
-}
-
-.config-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.config-list > div:nth-of-type(odd) {
-    font-weight: 600;
-    color: var(--bs-body-color);
-    margin-bottom: 4px;
+    margin-right: 4px;
 }
