@@ -28,8 +28,8 @@
   },
   "Socketor.Components.WebSocketClientComp": {
     "WebSocketAddress": "WebSocket 地址",
-    "Disconnected": "已断开",
-    "Connected": "已连接",
+    "Disconnect": "断开",
+    "Connect": "连接",
     "ConnectionSettings": "连接设置",
     "WebSocketState": "WebSocket 状态",
     "ConnectionClosed": "连接已关闭",

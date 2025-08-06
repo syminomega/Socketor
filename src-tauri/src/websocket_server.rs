@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
-use tauri::{State, Manager, Emitter};
+use tauri::{State, Emitter};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, Mutex, RwLock};
 use tokio::task::JoinHandle;
@@ -51,6 +51,7 @@ impl Default for WebSocketServerManager {
 
 // 启动WebSocket服务器的参数
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StartServerParams {
     pub host: String,
     pub port: u16,
@@ -59,6 +60,7 @@ pub struct StartServerParams {
 
 // 发送消息的参数
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SendMessageParams {
     pub server_id: String,
     pub message: String,
@@ -67,6 +69,7 @@ pub struct SendMessageParams {
 
 // 服务器状态信息
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ServerInfo {
     pub server_id: String,
     pub host: String,
@@ -77,6 +80,7 @@ pub struct ServerInfo {
 
 // WebSocket事件数据（发送给前端）
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct WebSocketServerEvent {
     pub server_id: String,
     pub event_type: String,
@@ -349,10 +353,10 @@ async fn handle_connection(
 #[tauri::command]
 pub async fn start_websocket_server(
     app_handle: tauri::AppHandle,
-    params: StartServerParams,
+    start_params: StartServerParams,
     state: State<'_, Mutex<WebSocketServerManager>>,
 ) -> Result<String, String> {
-    let server_id = params.server_id.unwrap_or_else(|| Uuid::new_v4().to_string());
+    let server_id = start_params.server_id.unwrap_or_else(|| Uuid::new_v4().to_string());
     let mut manager = state.lock().await;
 
     // 检查服务器ID是否已存在
@@ -360,7 +364,7 @@ pub async fn start_websocket_server(
         return Err(format!("Server with ID {} already exists", server_id));
     }
 
-    let mut server = WebSocketServer::new(params.host.clone(), params.port, server_id.clone());
+    let mut server = WebSocketServer::new(start_params.host.clone(), start_params.port, server_id.clone());
     server.set_app_handle(app_handle);
     server.start().await?;
 
@@ -394,31 +398,31 @@ pub async fn stop_websocket_server(
 // Tauri命令：发送消息
 #[tauri::command]
 pub async fn send_websocket_message(
-    params: SendMessageParams,
+    send_params: SendMessageParams,
     state: State<'_, Mutex<WebSocketServerManager>>,
 ) -> Result<String, String> {
-    if params.server_id.is_empty() {
+    if send_params.server_id.is_empty() {
         return Err("Server ID cannot be empty".to_string());
     }
     
-    if params.message.is_empty() {
+    if send_params.message.is_empty() {
         return Err("Message cannot be empty".to_string());
     }
     
     let manager = state.lock().await;
 
-    if let Some(server) = manager.servers.get(&params.server_id) {
-        if let Some(target_client_id) = params.target_client_id {
+    if let Some(server) = manager.servers.get(&send_params.server_id) {
+        if let Some(target_client_id) = send_params.target_client_id {
             // 发送给特定客户端
-            server.send_message_to_client(&target_client_id, &params.message).await?;
+            server.send_message_to_client(&target_client_id, &send_params.message).await?;
             Ok(format!("Message sent to client {}", target_client_id))
         } else {
             // 广播给所有客户端
-            let sent_count = server.broadcast_message(&params.message).await?;
+            let sent_count = server.broadcast_message(&send_params.message).await?;
             Ok(format!("Message broadcast to {} clients", sent_count))
         }
     } else {
-        Err(format!("Server with ID {} not found", params.server_id))
+        Err(format!("Server with ID {} not found", send_params.server_id))
     }
 }
 
@@ -450,14 +454,16 @@ pub async fn get_websocket_server_info(
     state: State<'_, Mutex<WebSocketServerManager>>,
 ) -> Result<ServerInfo, String> {
     let server_id = server_id.ok_or("Server ID is required")?;
-    
+    println!("Fetching info for server ID: {}", server_id);
     if server_id.is_empty() {
         return Err("Server ID cannot be empty".to_string());
     }
     
     let manager = state.lock().await;
+    println!("Current servers: {:?}", manager.servers.keys());
 
     if let Some(server) = manager.servers.get(&server_id) {
+        println!("Found server: {}:{}, is running: {}", server.host, server.port, server.is_running());
         Ok(ServerInfo {
             server_id: server_id.clone(),
             host: server.host.clone(),
@@ -466,6 +472,7 @@ pub async fn get_websocket_server_info(
             is_running: server.is_running(),
         })
     } else {
+        println!("Server with ID {} not found", server_id);
         Err(format!("Server with ID {} not found", server_id))
     }
 }

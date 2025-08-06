@@ -1,8 +1,5 @@
-use socketor_tcp_server::{TcpServerManager, start_tcp_server};
-use websocket_server::{
-    WebSocketServerManager, start_websocket_server, stop_websocket_server, 
-    send_websocket_message, get_websocket_servers, get_websocket_server_info
-};
+use socketor_tcp_server::{TcpServerManager};
+use websocket_server::{WebSocketServerManager};
 use tokio::sync::Mutex;
 use tauri::Manager;
 
@@ -26,12 +23,12 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet, 
-            start_tcp_server,
-            start_websocket_server,
-            stop_websocket_server,
-            send_websocket_message,
-            get_websocket_servers,
-            get_websocket_server_info
+            socketor_tcp_server::start_tcp_server,
+            websocket_server::start_websocket_server,
+            websocket_server::stop_websocket_server,
+            websocket_server::send_websocket_message,
+            websocket_server::get_websocket_servers,
+            websocket_server::get_websocket_server_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

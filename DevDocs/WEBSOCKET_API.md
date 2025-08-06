@@ -106,4 +106,3 @@ get_websocket_server_info(server_id: String) -> Result<ServerInfo, String>
 - `serde`: 序列化/反序列化
 - `tauri`: 与前端通信
 
-这个实现已经可以直接使用，你只需要在Blazor前端调用对应的Tauri命令即可。

@@ -76,11 +76,12 @@
     // ws client instance
     private ClientWebSocket _webSocket = new();
 
+    // 启动后按钮变成断开按钮
     private string ConnectButtonText() =>
-        _isConnected ? Localizer["Connected"] : Localizer["Disconnected"];
+        _isConnected ? Localizer["Disconnect"] : Localizer["Connect"];
 
     private Color ConnectButtonColor() =>
-        _isConnected ? Color.Success : Color.Danger;
+        _isConnected ? Color.Danger : Color.Success;
 
     private MessageBox? _messageBox;
 
