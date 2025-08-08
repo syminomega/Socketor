@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="/SocketorIcon.png" alt="Socketor Logo" width="200">
+</div>
+
 # Socketor
 一个简单的网络调试工具，当前支持 WebSocket 客户端与服务器，更多功能开发中。 \
  Simple tool for WebSocket, TCP/UDP testing.
