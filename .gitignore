@@ -27,6 +27,7 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+dist
 
 # Visual Studio Code cache/options directory
 .vscode/
