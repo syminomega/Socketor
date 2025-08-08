@@ -101,12 +101,15 @@
 
     private Color ServerButtonColor() =>
         _isServerRunning ? Color.Danger : Color.Success;
+    
+    private bool _isTauri;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
         if (firstRender)
         {
+            _isTauri = await Tauri.Core.IsTauri();
             // 加载存储的配置
             var storedConfig = await LocalStorage.GetItemAsync<WebSocketServerConfig?>("WebSocketServerConfig");
             if (storedConfig != null)
@@ -122,7 +125,14 @@
             }
 
             // 监听来自Tauri后端的WebSocket事件
-            _unlistenServerMessage = await Tauri.Event.Listen<WebSocketServerEvent>("websocket-server-event", OnServerEventReceived);
+            if (_isTauri)
+            {
+                _unlistenServerMessage = await Tauri.Event.Listen<WebSocketServerEvent>("websocket-server-event", OnServerEventReceived);
+            }
+            else
+            {
+                Logger.LogWarning("Tauri is not available, WebSocket server events will not be received.");
+            }
 
             StateHasChanged();
         }
@@ -130,6 +140,12 @@
 
     private async Task RefreshServerStatus()
     {
+        if (!_isTauri)
+        {
+            _serverStatus = "Disabled";
+            _isServerRunning = false;
+            _clientCount = 0;
+        }
         if (string.IsNullOrWhiteSpace(_currentServerId))
         {
             _serverStatus = "Stopped";
@@ -163,6 +179,12 @@
 
     private async Task ToggleServerStateClick()
     {
+        if (!_isTauri)
+        {
+            await ToastService.Warning(Localizer["TauriNotAvailable"]);
+            return;
+        }
+        
         await SaveConfig();
 
         if (_isServerRunning)

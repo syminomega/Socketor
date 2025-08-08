@@ -62,6 +62,7 @@
     "StopServerFailed": "停止服务器失败",
     "ServerNotRunning": "服务器未运行",
     "SendFailed": "消息发送失败",
-    "GetServerStatusFailed": "获取服务器状态失败"
+    "GetServerStatusFailed": "获取服务器状态失败",
+    "TauriNotAvailable": "未能获取 Tauri API"
   }
 }

@@ -62,6 +62,7 @@
     "StopServerFailed": "Failed to Stop Server",
     "ServerNotRunning": "Server Not Running",
     "SendFailed": "Message Sending Failed",
-    "GetServerStatusFailed": "Failed to Get Server Status"
+    "GetServerStatusFailed": "Failed to Get Server Status",
+    "TauriNotAvailable": "Tauri API Not Available"
   }
 }
