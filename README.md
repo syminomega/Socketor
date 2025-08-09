@@ -31,8 +31,10 @@ Run `cargo tauri build` under the main directory to pack the executable file.
 | WebSocket Client | Finished    |
 | WebSocket Server | Finished    |
 | TCP Client       | In Progress |
-| TCP Server       | In Progress |
+| TCP Server       | Finished    |
 | UDP Client       | Plan        |
+| gRPC Client      | Plan        |
+| SignalR Client   | Plan        |
 
 
 ## 构建与开发

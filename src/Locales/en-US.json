@@ -64,5 +64,25 @@
     "SendFailed": "Message Sending Failed",
     "GetServerStatusFailed": "Failed to Get Server Status",
     "TauriNotAvailable": "Tauri API Not Available"
+  },
+  "Socketor.Components.TcpServerComp": {
+    "ServerAddress": "Server Address",
+    "Host": "Host",
+    "Port": "Port", 
+    "Start": "Start",
+    "Stop": "Stop",
+    "ServerSettings": "Server Settings",
+    "ServerStatus": "Server Status",
+    "ConnectedClients": "Connected Clients",
+    "ServerId": "Server ID",
+    "MessageType": "Message Type",
+    "ServerStarted": "TCP Server Started",
+    "ServerStopped": "TCP Server Stopped",
+    "StartServerFailed": "Failed to Start TCP Server",
+    "StopServerFailed": "Failed to Stop TCP Server",
+    "ServerNotRunning": "TCP Server Not Running",
+    "SendFailed": "Message Sending Failed",
+    "GetServerStatusFailed": "Failed to Get TCP Server Status",
+    "TauriNotAvailable": "Tauri API Not Available"
   }
 }

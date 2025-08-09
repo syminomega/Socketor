@@ -1,0 +1,41 @@
+.tcp-server-main {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 4px;
+    height: 100%;
+    width: 100%;
+}
+
+.tcp-server-left {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tcp-server-left-top {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    height: 100%;
+}
+
+.tcp-server-left-bottom {
+    padding: 8px;
+}
+
+.tcp-server-right-container {
+    padding: 8px;
+}
+
+.config-list {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    align-items: center;
+}
+
+.config-list > div:first-child {
+    font-weight: bold;
+    white-space: nowrap;
+}
