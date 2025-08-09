@@ -1,10 +1,12 @@
 use websocket_server::{WebSocketServerManager};
 use tcp_server::{TcpServerManager};
+use tcp_client::{TcpClientManager};
 use tokio::sync::Mutex;
 use tauri::Manager;
 
 mod websocket_server;
 mod tcp_server;
+mod tcp_client;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -12,6 +14,7 @@ pub fn run() {
         .setup(|app| {
             app.manage(Mutex::new(WebSocketServerManager::default()));
             app.manage(Mutex::new(TcpServerManager::default()));
+            app.manage(Mutex::new(TcpClientManager::default()));
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
@@ -25,7 +28,12 @@ pub fn run() {
             tcp_server::stop_tcp_server,
             tcp_server::send_tcp_message,
             tcp_server::get_tcp_servers,
-            tcp_server::get_tcp_server_info
+            tcp_server::get_tcp_server_info,
+            tcp_client::connect_tcp_client,
+            tcp_client::disconnect_tcp_client,
+            tcp_client::send_tcp_client_message,
+            tcp_client::get_tcp_clients,
+            tcp_client::get_tcp_client_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

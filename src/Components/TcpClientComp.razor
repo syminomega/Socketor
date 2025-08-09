@@ -1,0 +1,286 @@
+@using Microsoft.JSInterop
+@using System.Text
+@using Blazored.LocalStorage
+@using Microsoft.Extensions.Localization
+@using Socketor.Components.Widgets
+@using Socketor.DataModel.Configs
+@using Microsoft.AspNetCore.Components.Sections
+@using Socketor.DataModel
+@inject IStringLocalizer<TcpClientComp> Localizer
+@inject ILocalStorageService LocalStorage
+@inject ToastService ToastService
+
+@inject ILogger<TcpClientComp> Logger
+@inject Tauri Tauri
+
+<div class="tcp-client-main">
+    <div class="tcp-client-left">
+        <Split IsVertical="true" Basis="65%" FirstPaneMinimumSize="200px" SecondPaneMinimumSize="80px">
+            <FirstPaneTemplate>
+                <div class="tcp-client-left-top">
+                    <BootstrapInputGroup>
+                        <BootstrapInputGroupLabel DisplayText="@Localizer["Host"]"/>
+                        <BootstrapInput TValue="string" @bind-Value="Config.Host" Disabled="_isConnected"/>
+                    </BootstrapInputGroup>
+                    <BootstrapInputGroup>
+                        <BootstrapInputGroupLabel DisplayText="@Localizer["Port"]"/>
+                        <BootstrapInput TValue="int" @bind-Value="Config.Port" Disabled="_isConnected"/>
+                        <Button Text="@ConnectButtonText()" Color="ConnectButtonColor()"
+                                OnClick="@ChangeConnectStateClick" IsAsync="true"></Button>
+                    </BootstrapInputGroup>
+                    <MessageBox @ref="_messageBox" ConfigSectionName="@TcpClientMsgBoxConfigSectionName"
+                                MessageBoxConfig="Config.MessageBoxConfig"/>
+                </div>
+            </FirstPaneTemplate>
+            <SecondPaneTemplate>
+                <div class="tcp-client-left-bottom">
+                    <SendBox ConfigSectionName="@TcpClientSendBoxConfigSectionName"
+                             SendBoxConfig="Config.SendBoxConfig" Enabled="_isConnected"
+                             OnMessageSend="OnMessageSend"/>
+                </div>
+            </SecondPaneTemplate>
+        </Split>
+    </div>
+
+    <div style="grid-column: 2; position: relative; width: calc(100% + 4px)">
+        <Scroll style="position: absolute;">
+            <div class="tcp-client-right-container">
+                <Card HeaderText="@Localizer["ConnectionSettings"]" IsCollapsible="true">
+                    <BodyTemplate>
+                        <div class="config-list">
+                            <div>@Localizer["ConnectionState"]</div>
+                            <BootstrapInputGroup>
+                                <Display TValue="string" Value="_connectionState"></Display>
+                                <Button Icon="fa-solid fa-rotate"
+                                        OnClick="@RefreshConnectionState"></Button>
+                            </BootstrapInputGroup>
+                            <div>@Localizer["ClientId"]</div>
+                            <Display TValue="string" Value="@_currentClientId"></Display>
+                        </div>
+                    </BodyTemplate>
+                </Card>
+                <SectionOutlet SectionName="@TcpClientMsgBoxConfigSectionName"/>
+                <SectionOutlet SectionName="@TcpClientSendBoxConfigSectionName"/>
+            </div>
+        </Scroll>
+    </div>
+</div>
+
+@code {
+    private const string TcpClientMsgBoxConfigSectionName = "TcpClientMsgBoxConfig";
+    private const string TcpClientSendBoxConfigSectionName = "TcpClientSendBoxConfig";
+
+    private TcpClientConfig Config { get; set; } = new();
+
+    private UnlistenFn? _unlistenClientMessage;
+
+    private string _connectionState = "Disconnected";
+    private string _currentClientId = "";
+    private bool _isConnected;
+
+    private string ConnectButtonText() =>
+        _isConnected ? Localizer["Disconnect"] : Localizer["Connect"];
+
+    private Color ConnectButtonColor() =>
+        _isConnected ? Color.Danger : Color.Success;
+
+    private MessageBox? _messageBox;
+
+    private bool _isTauri;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            _isTauri = await Tauri.Core.IsTauri();
+            var storedConfig = await LocalStorage.GetItemAsync<TcpClientConfig?>("TcpClientConfig");
+            if (storedConfig != null)
+            {
+                Config = storedConfig;
+            }
+
+if (_isTauri){
+            // 注册事件监听器
+             _unlistenClientMessage =   await Tauri.Event.Listen<TcpClientEventData>("tcp-client-event", OnTcpClientEventReceived);
+}
+            else
+            {
+                Logger.LogWarning("Tauri is not available, TCP client events will not be received.");
+            }
+
+            StateHasChanged();
+        }
+    }
+
+
+    private void RefreshConnectionState()
+    {
+        // 从后端获取当前连接状态
+        InvokeAsync(async () =>
+        {
+            if (!string.IsNullOrEmpty(_currentClientId))
+            {
+                try
+                {
+                    var clientInfo = await Tauri.Core.Invoke<TcpClientInfoData>("get_tcp_client_info", new { clientId = _currentClientId });
+                    
+                    _connectionState = clientInfo.State;
+                    _isConnected = clientInfo.State == "Connected";
+                    StateHasChanged();
+                }
+                catch (Exception ex)
+                {
+                    await ToastService.Error(Localizer["GetStateFailed"], ex.Message);
+                }
+            }
+        });
+    }
+
+    private async Task ChangeConnectStateClick()
+    {
+        if (_isConnected)
+        {
+            await DisconnectAsync();
+        }
+        else
+        {
+            await ConnectAsync();
+        }
+    }
+
+    private async Task ConnectAsync()
+    {
+        try
+        {
+            // 保存配置
+            await LocalStorage.SetItemAsync("TcpClientConfig", Config);
+
+            var connectParams = new
+            {
+                host = Config.Host,
+                port = Config.Port,
+                clientId = !string.IsNullOrEmpty(Config.ClientId) ? Config.ClientId : null
+            };
+
+            _currentClientId = await Tauri.Core.Invoke<string>("connect_tcp_client", connectParams);
+
+            Config.ClientId = _currentClientId;
+            _connectionState = "Connecting";
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            _isConnected = false;
+            _connectionState = "Error";
+            await ToastService.Error(Localizer["ConnectionFailed"], e.Message);
+        }
+    }
+
+    private async Task DisconnectAsync()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(_currentClientId))
+            {
+                await Tauri.Core.Invoke("disconnect_tcp_client", new { clientId = _currentClientId });
+            }
+
+            _isConnected = false;
+            _connectionState = "Disconnected";
+            _currentClientId = "";
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            await ToastService.Error(Localizer["DisconnectionFailed"], e.Message);
+        }
+    }
+
+    private async Task OnMessageSend(MessageData messageData)
+    {
+        if (!_isConnected || string.IsNullOrEmpty(_currentClientId))
+        {
+            await ToastService.Warning(Localizer["SendFailed"], "Not connected to server");
+            return;
+        }
+
+        _messageBox?.AddMessage(messageData);
+        try
+        {
+            var message = Encoding.UTF8.GetString(messageData.RawMessage);
+            var messageType = messageData.MessageType == MessageType.Text ? "text" : "hex";
+
+            var sendParams = new
+            {
+                clientId = _currentClientId,
+                message = message,
+                messageType = messageType
+            };
+
+            await Tauri.Core.Invoke("send_tcp_client_message", sendParams);
+        }
+        catch (Exception e)
+        {
+            var errorMessage = $"{Localizer["SendFailed"]}: {e.Message}";
+            _messageBox?.AddMessage(new MessageData(MessageOwner.Error, Encoding.UTF8.GetBytes(errorMessage)));
+            await ToastService.Error(Localizer["SendFailed"], e.Message);
+        }
+    }
+
+    // 数据传输对象
+    private class TcpClientEventData
+    {
+        public string ClientId { get; set; } = "";
+        public string EventType { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string Timestamp { get; set; } = "";
+    }
+
+    private class TcpClientInfoData
+    {
+        public string ClientId { get; set; } = "";
+        public string Host { get; set; } = "";
+        public int Port { get; set; }
+        public string State { get; set; } = "";
+    }
+
+    private async Task OnTcpClientEventReceived(TcpClientEventData eventData)
+    {
+        // 只处理当前客户端的事件
+        if (eventData.ClientId != _currentClientId)
+            return;
+
+        // 根据事件类型处理不同的事件
+        var messageOwner = eventData.EventType switch
+        {
+            "connected" => MessageOwner.Info,
+            "disconnected" => MessageOwner.Info,
+            "message_received" => MessageOwner.Receive,
+            "error" => MessageOwner.Error,
+            _ => MessageOwner.Info
+        };
+
+        var messageData = new MessageData(messageOwner, Encoding.UTF8.GetBytes(eventData.Message));
+        _messageBox?.AddMessage(messageData);
+
+        // 更新连接状态
+        switch (eventData.EventType)
+        {
+            case "connected":
+                _isConnected = true;
+                _connectionState = "Connected";
+                break;
+            case "disconnected":
+                _isConnected = false;
+                _connectionState = "Disconnected";
+                break;
+            case "error":
+                await ToastService.Error(Localizer["Error"], eventData.Message);
+                break;
+        }
+
+        StateHasChanged();
+    }
+
+}

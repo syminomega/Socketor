@@ -84,5 +84,20 @@
     "SendFailed": "Message Sending Failed",
     "GetServerStatusFailed": "Failed to Get TCP Server Status",
     "TauriNotAvailable": "Tauri API Not Available"
+  },
+  "Socketor.Components.TcpClientComp": {
+    "Host": "Host",
+    "Port": "Port",
+    "Connect": "Connect",
+    "Disconnect": "Disconnect",
+    "ConnectionSettings": "Connection Settings",
+    "ConnectionState": "Connection State",
+    "ClientId": "Client ID",
+    "ConnectionFailed": "TCP Connection Failed",
+    "DisconnectionFailed": "TCP Disconnection Failed",
+    "SendFailed": "Message Sending Failed",
+    "GetStateFailed": "Failed to Get Connection State",
+    "Error": "Error",
+    "EventHandlingError": "Event Handling Error"
   }
 }

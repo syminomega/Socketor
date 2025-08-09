@@ -360,11 +360,11 @@
         public string Timestamp { get; set; } = "";
     }
 
-    private Task OnServerEventReceived(TcpServerEvent serverEvent)
+    private async Task OnServerEventReceived(TcpServerEvent serverEvent)
     {
         // 只处理当前服务器的事件
         if (serverEvent.ServerId != _currentServerId)
-            return Task.CompletedTask;
+            return;
 
         // 根据事件类型处理不同的事件
         var messageOwner = serverEvent.EventType switch
@@ -389,10 +389,9 @@
         // 如果是客户端连接/断开事件，刷新客户端计数
         if (serverEvent.EventType == "client_connected" || serverEvent.EventType == "client_disconnected")
         {
-            InvokeAsync(RefreshServerStatus);
+           await RefreshServerStatus();
         }
 
-        InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
+        StateHasChanged();
     }
 }
