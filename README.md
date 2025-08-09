@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./SocketorIcon.png" alt="Socketor Logo" width="200">
+  <img src="./src/wwwroot/img/icon.png" alt="Socketor Logo" width="200">
   <h1>Socketor</h1>
   <p>基于 <code>BootstrapBlazor</code> 的轻量级网络调试工具</p>
 </div>

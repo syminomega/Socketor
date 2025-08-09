@@ -11,8 +11,25 @@
     <link rel="stylesheet" href="Socketor.styles.css"/>
   </head>
 
-  <body style="background-color: transparent;">
-    <div id="app"></div>
+  <body>
+    <div id="app">
+      <div class="loading-container">
+        <div class="loading-content">
+          <div class="logo-container">
+            <img src="img/icon.png" alt="Socketor" class="loading-logo" />
+            <h2 class="loading-title">Socketor</h2>
+          </div>
+          <div class="loading-progress">
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
+            </div>
+            <div class="loading-text">
+              Loading... <span class="loading-percentage"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="js/socketor-utilities.js"></script>
     <script src="_content/BootstrapBlazor/js/bootstrap.blazor.bundle.min.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
