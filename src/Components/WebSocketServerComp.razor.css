@@ -1,12 +1,12 @@
 .ws-server-main {
-    /*分为左右两部分*/
+    /*left and right*/
     display: grid;
     grid-template-columns: 1fr 16rem;
     position: relative;
     height: 100%;
 }
 
-/*左侧*/
+/*left side*/
 .ws-server-left {
     grid-column: 1;
     padding-right: 8px;
@@ -30,7 +30,7 @@
     align-items: stretch;
 }
 
-/*右侧*/
+/*right side*/
 .ws-server-right-container {
     display: flex;
     flex-direction: column;

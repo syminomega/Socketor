@@ -1,41 +1,39 @@
 .tcp-server-main {
+    /*left and right*/
     display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 4px;
+    grid-template-columns: 1fr 16rem;
+    position: relative;
     height: 100%;
-    width: 100%;
 }
 
+/*left side*/
 .tcp-server-left {
+    grid-column: 1;
+    padding-right: 8px;
     display: flex;
     flex-direction: column;
-    height: 100%;
 }
 
 .tcp-server-left-top {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 8px;
+    gap: 4px;
+    padding-bottom: 8px;
     height: 100%;
 }
 
 .tcp-server-left-bottom {
-    padding: 8px;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    padding-top: 8px;
+    align-items: stretch;
 }
 
+/*right side*/
 .tcp-server-right-container {
-    padding: 8px;
-}
-
-.config-list {
-    display: grid;
-    grid-template-columns: auto 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    align-items: center;
-}
-
-.config-list > div:first-child {
-    font-weight: bold;
-    white-space: nowrap;
+    margin-right: 4px;
 }

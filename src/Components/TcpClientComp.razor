@@ -21,8 +21,6 @@
                     <BootstrapInputGroup>
                         <BootstrapInputGroupLabel DisplayText="@Localizer["Host"]"/>
                         <BootstrapInput TValue="string" @bind-Value="Config.Host" Disabled="_isConnected"/>
-                    </BootstrapInputGroup>
-                    <BootstrapInputGroup>
                         <BootstrapInputGroupLabel DisplayText="@Localizer["Port"]"/>
                         <BootstrapInput TValue="int" @bind-Value="Config.Port" Disabled="_isConnected"/>
                         <Button Text="@ConnectButtonText()" Color="ConnectButtonColor()"

@@ -1,11 +1,15 @@
 .tcp-client-main {
+    /*left and right*/
     display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 4px;
+    grid-template-columns: 1fr 16rem;
+    position: relative;
     height: 100%;
 }
 
+/*left side*/
 .tcp-client-left {
+    grid-column: 1;
+    padding-right: 8px;
     display: flex;
     flex-direction: column;
 }
@@ -13,35 +17,23 @@
 .tcp-client-left-top {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 8px;
-    background-color: var(--bs-body-bg);
-    border: 1px solid var(--bs-border-color);
-    border-radius: 8px;
+    gap: 4px;
+    padding-bottom: 8px;
+    height: 100%;
 }
 
 .tcp-client-left-bottom {
-    padding: 8px;
-    background-color: var(--bs-body-bg);
-    border: 1px solid var(--bs-border-color);
-    border-radius: 8px;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    padding-top: 8px;
+    align-items: stretch;
 }
 
+/*right side*/
 .tcp-client-right-container {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 8px;
-}
-
-.config-list {
-    display: grid;
-    grid-template-columns: 120px 1fr;
-    gap: 8px;
-    align-items: center;
-}
-
-.config-list > div:nth-child(odd) {
-    font-weight: 500;
-    color: var(--bs-secondary);
+    margin-right: 4px;
 }
