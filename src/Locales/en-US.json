@@ -1,11 +1,9 @@
 {
   "Socketor.Pages.Home": {
-    "WebSocketClient": "WebSocket Client",
+    "TcpServer": "TCP Server",
+    "TcpClient": "TCP Client",
     "WebSocketServer": "WebSocket Server",
-    "TCPClient": "TCP Client",
-    "TCPServer": "TCP Server",
-    "UDPClient": "UDP Client",
-    "CreateNewInstance": "Create New Instance"
+    "WebSocketClient": "WebSocket Client"
   },
   "Socketor.Components.Widgets.AppSettingsPopover": {
     "AppSettings": "App Settings",

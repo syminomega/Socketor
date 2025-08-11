@@ -1,11 +1,9 @@
 {
   "Socketor.Pages.Home": {
-    "WebSocketClient": "WebSocket 客户端",
+    "TcpServer": "TCP 服务器",
+    "TcpClient": "TCP 客户端",
     "WebSocketServer": "WebSocket 服务器",
-    "TCPClient": "TCP 客户端",
-    "TCPServer": "TCP 服务器",
-    "UDPClient": "UDP 客户端",
-    "CreateNewInstance": "创建新实例"
+    "WebSocketClient": "WebSocket 客户端"
   },
   "Socketor.Components.Widgets.AppSettingsPopover": {
     "AppSettings": "程序设置",
