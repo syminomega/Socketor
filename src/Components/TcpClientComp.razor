@@ -1,4 +1,3 @@
-@using Microsoft.JSInterop
 @using System.Text
 @using Blazored.LocalStorage
 @using Microsoft.Extensions.Localization
@@ -79,8 +78,8 @@
     private string ConnectButtonText() =>
         _isConnected ? Localizer["Disconnect"] : Localizer["Connect"];
 
-    private Color ConnectButtonColor() =>
-        _isConnected ? Color.Danger : Color.Success;
+    private BBColor ConnectButtonColor() =>
+        _isConnected ? BBColor.Danger : BBColor.Success;
 
     private MessageBox? _messageBox;
 

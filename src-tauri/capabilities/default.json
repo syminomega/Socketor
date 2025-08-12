@@ -6,17 +6,19 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "core:app:allow-set-app-theme",
-    "core:window:allow-set-theme",
+
+    "core:app:allow-default-window-icon",
+
+    "core:window:allow-center",
+    "core:window:allow-show",
+    "core:window:allow-hide",
     "core:window:allow-create",
     "core:window:allow-close",
     "core:window:allow-destroy",
+    "core:window:allow-start-dragging",
+
     "core:webview:allow-create-webview-window",
     "core:webview:allow-webview-close",
-    "core:webview:allow-create-webview",
-    "core:event:allow-listen",
-    "core:event:allow-unlisten",
-    "core:event:allow-emit",
-    "core:event:allow-emit-to"
+    "core:webview:allow-create-webview"
   ]
 }

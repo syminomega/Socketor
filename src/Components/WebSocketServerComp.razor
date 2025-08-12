@@ -99,8 +99,8 @@
     private string ServerButtonText() =>
         _isServerRunning ? Localizer["Stop"] : Localizer["Start"];
 
-    private Color ServerButtonColor() =>
-        _isServerRunning ? Color.Danger : Color.Success;
+    private BBColor ServerButtonColor() =>
+        _isServerRunning ? BBColor.Danger : BBColor.Success;
     
     private bool _isTauri;
 
