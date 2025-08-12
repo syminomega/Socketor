@@ -67,7 +67,11 @@
         {
             var windowGuid = Guid.NewGuid().ToString();
             await Tauri.WebviewWindow.CreateWebviewWindow(windowGuid,
-                new WindowOptions(), new WebviewOptions
+                new WindowOptions
+                {
+                    Title = "Initializing...",
+                    TitleBarStyle = TitleBarStyle.Transparent,
+                }, new WebviewOptions
                 {
                     Url = url
                 });
