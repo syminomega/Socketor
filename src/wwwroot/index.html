@@ -12,26 +12,28 @@
   </head>
 
   <body>
-    <div id="app">
-      <div class="loading-container">
-        <div class="loading-content">
-          <div class="logo-container">
-            <img src="img/icon.png" alt="Socketor" class="loading-logo" />
-            <h2 class="loading-title">Socketor</h2>
+    <!-- 加载页面组件，独立于 Blazor app -->
+    <div class="loading-container">
+      <div class="loading-content">
+        <div class="logo-container">
+          <img src="img/icon.png" alt="Socketor" class="loading-logo" />
+          <h2 class="loading-title">Socketor</h2>
+        </div>
+        <div class="loading-progress">
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
           </div>
-          <div class="loading-progress">
-            <div class="progress-bar">
-              <div class="progress-fill"></div>
-            </div>
-            <div class="loading-text">
-              Loading... <span class="loading-percentage"></span>
-            </div>
+          <div class="loading-text">
+            Loading... <span class="loading-percentage"></span>
           </div>
         </div>
       </div>
     </div>
-    <script src="js/socketor-utilities.js"></script>
+    
+    <!-- Blazor 应用容器 -->
+    <div id="app"></div>
     <script src="_content/BootstrapBlazor/js/bootstrap.blazor.bundle.min.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="js/socketor-utilities.js"></script>
   </body>
 </html>

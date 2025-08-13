@@ -1,7 +1,9 @@
-﻿<BootstrapBlazorRoot>
+﻿@inject IJSRuntime JsRuntime
+
+<BootstrapBlazorRoot>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <RouteView RouteData="@routeData"/>
+            <RouteView RouteData="@routeData" />
         </Found>
         <NotFound>
             <PageTitle>Not found</PageTitle>
@@ -9,3 +11,15 @@
         </NotFound>
     </Router>
 </BootstrapBlazorRoot>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            var loadServiceModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/Utilities/LoadService.js");
+            await loadServiceModule.InvokeVoidAsync("RemoveLoadingIndicator");
+        }
+    }
+}
