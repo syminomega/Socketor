@@ -97,10 +97,11 @@
                 Config = storedConfig;
             }
 
-if (_isTauri){
-            // 注册事件监听器
-             _unlistenClientMessage =   await Tauri.Event.Listen<TcpClientEventData>("tcp-client-event", OnTcpClientEventReceived);
-}
+            if (_isTauri)
+            {
+                // 注册事件监听器
+                _unlistenClientMessage = await Tauri.Event.Listen<TcpClientEventData>("tcp-client-event", OnTcpClientEventReceived);
+            }
             else
             {
                 Logger.LogWarning("Tauri is not available, TCP client events will not be received.");

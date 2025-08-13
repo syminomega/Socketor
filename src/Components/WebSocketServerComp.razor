@@ -1,5 +1,4 @@
 @using System.Text
-@using System.Text.Json.Serialization
 @using Blazored.LocalStorage
 @using Microsoft.Extensions.Localization
 @using Socketor.Components.Widgets
@@ -68,7 +67,7 @@
                             </BootstrapInputGroup>
 
                             <div>@Localizer["ServerId"]</div>
-                            <Display TValue="string" Value="_currentServerId"></Display>
+                            <Display TValue="string" Value="_windowUniqueLabel"></Display>
                         </div>
                     </BodyTemplate>
                 </Card>
@@ -86,13 +85,17 @@
     private WebSocketServerConfig Config { get; set; } = new();
 
     private string _serverStatus = "Stopped";
+
     private bool _isServerRunning;
-    private string _currentServerId = "";
+
+    // used as a unique identifier for the WebSocket server instance
+    private string _windowUniqueLabel = "";
     private int _clientCount;
     private MessageBox? _messageBox;
 
     // Tauri事件监听器
     private UnlistenFn? _unlistenServerMessage;
+    private ITauriWindow? _tauriWindow;
 
     private string ServerAddressDisplay => $"ws://{Config.Host}:{Config.Port}";
 
@@ -101,7 +104,7 @@
 
     private BBColor ServerButtonColor() =>
         _isServerRunning ? BBColor.Danger : BBColor.Success;
-    
+
     private bool _isTauri;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -115,19 +118,16 @@
             if (storedConfig != null)
             {
                 Config = storedConfig;
-                // 如果配置中有ServerId，设置为当前服务器ID
-                if (!string.IsNullOrEmpty(Config.ServerId))
-                {
-                    _currentServerId = Config.ServerId;
-                    // 尝试获取服务器状态
-                    await RefreshServerStatus();
-                }
             }
 
             // 监听来自Tauri后端的WebSocket事件
             if (_isTauri)
             {
-                _unlistenServerMessage = await Tauri.Event.Listen<WebSocketServerEvent>("websocket-server-event", OnServerEventReceived);
+                _tauriWindow = await Tauri.Window.GetCurrentWindow();
+                _windowUniqueLabel = await _tauriWindow.Label;
+                await _tauriWindow.SetTitle("WebSocket Server - " + _windowUniqueLabel);
+                _unlistenServerMessage = await _tauriWindow.Listen<WebSocketServerEvent>("websocket-server-event", OnServerEventReceived);
+                await _tauriWindow.Once(TauriEventName.WindowCloseRequested, async () => await DisposeAsync());
             }
             else
             {
@@ -146,17 +146,16 @@
             _isServerRunning = false;
             _clientCount = 0;
         }
-        if (string.IsNullOrWhiteSpace(_currentServerId))
+
+        if (string.IsNullOrWhiteSpace(_windowUniqueLabel))
         {
-            _serverStatus = "Stopped";
-            _isServerRunning = false;
-            _clientCount = 0;
+            await ToastService.Error("Server ID is not set.");
             return;
         }
 
         try
         {
-            var serverInfo = await Tauri.Core.Invoke<ServerInfoResponse>("get_websocket_server_info", new { serverId = _currentServerId });
+            var serverInfo = await Tauri.Core.Invoke<ServerInfoResponse>("get_websocket_server_info", new { serverId = _windowUniqueLabel });
             _serverStatus = serverInfo.IsRunning ? "Running" : "Stopped";
             _clientCount = serverInfo.ClientCount;
             _isServerRunning = serverInfo.IsRunning;
@@ -166,9 +165,7 @@
             _serverStatus = "Stopped";
             _isServerRunning = false;
             _clientCount = 0;
-            // 服务器不存在，清理ServerId
-            _currentServerId = "";
-            Config.ServerId = "";
+
             await SaveConfig();
             Logger.LogError("Get websocket server status error: {Message}", e.Message);
             await ToastService.Warning("Server not found", "Server status cleared");
@@ -184,7 +181,7 @@
             await ToastService.Warning(Localizer["TauriNotAvailable"]);
             return;
         }
-        
+
         await SaveConfig();
 
         if (_isServerRunning)
@@ -201,25 +198,30 @@
 
     private async Task StartServer()
     {
+        if (string.IsNullOrWhiteSpace(_windowUniqueLabel))
+        {
+            await ToastService.Error("Server ID is not set.");
+            return;
+        }
+
         try
         {
             var startParams = new StartServerRequest
             {
                 Host = Config.Host,
                 Port = Config.Port,
-                ServerId = string.IsNullOrEmpty(Config.ServerId) ? null : Config.ServerId
+                ServerId = _windowUniqueLabel
             };
 
-            _currentServerId = await Tauri.Core.Invoke<string>("start_websocket_server", new { startParams });
-            Config.ServerId = _currentServerId;
+            await Tauri.Core.Invoke<string>("start_websocket_server", new { startParams });
 
             // 保存配置，确保ServerId被持久化
             await SaveConfig();
 
-            var startMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes($"{Localizer["ServerStarted"]} - ID: {_currentServerId}"));
+            var startMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes($"{Localizer["ServerStarted"]} - ID: {_windowUniqueLabel}"));
             _messageBox?.AddMessage(startMessage);
 
-            await ToastService.Success(Localizer["ServerStarted"], $"Server ID: {_currentServerId}");
+            await ToastService.Success(Localizer["ServerStarted"], $"Server ID: {_windowUniqueLabel}");
         }
         catch (Exception e)
         {
@@ -231,24 +233,20 @@
 
     private async Task StopServer()
     {
-        if (string.IsNullOrEmpty(_currentServerId))
+        if (string.IsNullOrEmpty(_windowUniqueLabel))
         {
-            await ToastService.Warning(Localizer["ServerNotRunning"]);
+            await ToastService.Error("Server ID is not set.");
             return;
         }
 
         try
         {
-            await Tauri.Core.Invoke("stop_websocket_server", new { serverId = _currentServerId });
+            await Tauri.Core.Invoke("stop_websocket_server", new { serverId = _windowUniqueLabel });
 
             var stopMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes(Localizer["ServerStopped"]));
             _messageBox?.AddMessage(stopMessage);
 
             await ToastService.Success(Localizer["ServerStopped"]);
-
-            // 只有在成功停止后才清空ID
-            _currentServerId = "";
-            Config.ServerId = "";
         }
         catch (Exception e)
         {
@@ -260,7 +258,7 @@
 
     private async Task OnMessageSend(MessageData messageData)
     {
-        if (!_isServerRunning || string.IsNullOrEmpty(_currentServerId))
+        if (!_isServerRunning || string.IsNullOrEmpty(_windowUniqueLabel))
         {
             await ToastService.Warning(Localizer["ServerNotRunning"]);
             return;
@@ -270,7 +268,7 @@
         {
             var sendParams = new SendMessageRequest
             {
-                ServerId = _currentServerId,
+                ServerId = _windowUniqueLabel,
                 Message = Encoding.UTF8.GetString(messageData.RawMessage),
                 TargetClientId = null // 广播给所有客户端，可以扩展为支持指定客户端
             };
@@ -298,13 +296,14 @@
 
     public async ValueTask DisposeAsync()
     {
-        // 清理事件监听器
+        // 清理Tauri事件监听器
         if (_unlistenServerMessage != null)
         {
             await _unlistenServerMessage.Invoke();
             _unlistenServerMessage = null;
         }
 
+        await StopServer();
         // 保存配置
         await SaveConfig();
     }
@@ -346,7 +345,7 @@
     private Task OnServerEventReceived(WebSocketServerEvent serverEvent)
     {
         // 只处理当前服务器的事件
-        if (serverEvent.ServerId != _currentServerId)
+        if (serverEvent.ServerId != _windowUniqueLabel)
             return Task.CompletedTask;
 
         // 根据事件类型处理不同的事件
@@ -380,4 +379,5 @@
         InvokeAsync(StateHasChanged);
         return Task.CompletedTask;
     }
+
 }
