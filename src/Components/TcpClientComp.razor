@@ -5,6 +5,7 @@
 @using Socketor.DataModel.Configs
 @using Microsoft.AspNetCore.Components.Sections
 @using Socketor.DataModel
+@using Size = BootstrapBlazor.Components.Size
 @inject IStringLocalizer<TcpClientComp> Localizer
 @inject ILocalStorageService LocalStorage
 @inject ToastService ToastService
@@ -41,16 +42,18 @@
     </div>
 
     <div style="grid-column: 2; position: relative; width: calc(100% + 4px)">
-        <Scroll style="position: absolute;">
+        <Scroll style="position: absolute; width: 100%;">
             <div class="tcp-client-right-container">
                 <Card HeaderText="@Localizer["ConnectionSettings"]" IsCollapsible="true">
+                    <HeaderTemplate>
+                        <Button Icon="fa-solid fa-rotate" Size="Size.ExtraSmall" Color="Color.Link"
+                                OnClick="@RefreshClientStatus"></Button>
+                    </HeaderTemplate>
                     <BodyTemplate>
                         <div class="config-list">
                             <div>@Localizer["ConnectionState"]</div>
                             <BootstrapInputGroup>
                                 <Display TValue="string" Value="_connectionState"></Display>
-                                <Button Icon="fa-solid fa-rotate"
-                                        OnClick="@RefreshClientStatus"></Button>
                             </BootstrapInputGroup>
                             <div>@Localizer["ClientId"]</div>
                             <Display TValue="string" Value="@_windowUniqueLabel"></Display>
@@ -105,7 +108,7 @@
                 _tauriWindow = await Tauri.Window.GetCurrentWindow();
                 _windowUniqueLabel = await _tauriWindow.Label;
                 await _tauriWindow.SetTitle("TCP Client");
-                _unlistenClientMessage = await Tauri.Event.Listen<TcpClientEventData>("tcp-client-event", OnTcpClientEventReceived);
+                _unlistenClientMessage = await _tauriWindow.Listen<TcpClientEventData>("tcp-client-event", OnTcpClientEventReceived);
                 // stop the client when the window is closed
                 await _tauriWindow.Once(TauriEventName.WindowCloseRequested, async () =>
                 {
@@ -192,12 +195,12 @@
         {
             var connectParams = new
             {
-                host = Config.Host,
-                port = Config.Port,
-                clientId = _windowUniqueLabel,
+                Config.Host,
+                Config.Port,
+                ClientId = _windowUniqueLabel,
             };
 
-            await Tauri.Core.Invoke<string>("connect_tcp_client", connectParams);
+            await Tauri.Core.Invoke<string>("connect_tcp_client", new { connectParams });
 
             await SaveConfig();
 
@@ -251,14 +254,14 @@
             var message = Encoding.UTF8.GetString(messageData.RawMessage);
             var messageType = messageData.MessageType == MessageType.Text ? "text" : "hex";
 
-            var sendParams = new
+            var sendParams = new SendTcpMessageRequest
             {
-                clientId = _windowUniqueLabel,
-                message = message,
-                messageType = messageType
+                ClientId = _windowUniqueLabel,
+                Message = message,
+                MessageType = messageType
             };
 
-            await Tauri.Core.Invoke("send_tcp_client_message", sendParams);
+            await Tauri.Core.Invoke("send_tcp_client_message", new { sendParams });
         }
         catch (Exception e)
         {
@@ -295,6 +298,21 @@
     }
 
     // 数据传输对象
+    private class SendTcpMessageRequest
+    {
+        public required string ClientId { get; set; }
+        public required string Message { get; set; }
+        public string MessageType { get; set; } = "text";
+    }
+    
+    private class TcpClientInfoData
+    {
+        public string ClientId { get; set; } = "";
+        public string Host { get; set; } = "";
+        public int Port { get; set; }
+        public string State { get; set; } = "";
+    }
+    
     private class TcpClientEventData
     {
         public string ClientId { get; set; } = "";
@@ -303,19 +321,14 @@
         public string Timestamp { get; set; } = "";
     }
 
-    private class TcpClientInfoData
-    {
-        public string ClientId { get; set; } = "";
-        public string Host { get; set; } = "";
-        public int Port { get; set; }
-        public string State { get; set; } = "";
-    }
-
     private async Task OnTcpClientEventReceived(TcpClientEventData eventData)
     {
         // 只处理当前客户端的事件
+        // TODO: 后端根据label发送消息到指定窗口
         if (eventData.ClientId != _windowUniqueLabel)
+        {
             return;
+        }
 
         // 根据事件类型处理不同的事件
         var messageOwner = eventData.EventType switch

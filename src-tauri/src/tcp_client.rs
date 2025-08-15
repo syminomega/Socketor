@@ -319,12 +319,12 @@ async fn handle_tcp_client_send(
 // Tauri命令：连接TCP服务器
 #[tauri::command]
 pub async fn connect_tcp_client(
-    params: ConnectTcpClientParams,
+    connect_params: ConnectTcpClientParams,
     manager: State<'_, Mutex<TcpClientManager>>,
     app_handle: tauri::AppHandle,
 ) -> Result<String, String> {
-    let client_id = params.client_id.unwrap_or_else(|| Uuid::new_v4().to_string());
-    let mut client = TcpClient::new(params.host, params.port, client_id.clone());
+    let client_id = connect_params.client_id.unwrap_or_else(|| Uuid::new_v4().to_string());
+    let mut client = TcpClient::new(connect_params.host, connect_params.port, client_id.clone());
     client.set_app_handle(app_handle);
     
     client.connect().await?;
@@ -355,25 +355,25 @@ pub async fn disconnect_tcp_client(
 // Tauri命令：发送TCP消息
 #[tauri::command]
 pub async fn send_tcp_client_message(
-    params: SendTcpClientMessageParams,
+    send_params: SendTcpClientMessageParams,
     manager: State<'_, Mutex<TcpClientManager>>,
 ) -> Result<(), String> {
-    let message_type = params.message_type.as_deref().unwrap_or("text");
+    let message_type = send_params.message_type.as_deref().unwrap_or("text");
     let data = match message_type {
         "hex" => {
             // 将十六进制字符串转换为字节
-            let hex_str = params.message.replace(" ", "");
+            let hex_str = send_params.message.replace(" ", "");
             hex::decode(&hex_str).map_err(|e| format!("Invalid hex string: {}", e))?
         }
-        _ => params.message.into_bytes(),
+        _ => send_params.message.into_bytes(),
     };
 
     let manager = manager.lock().await;
-    if let Some(client) = manager.clients.get(&params.client_id) {
+    if let Some(client) = manager.clients.get(&send_params.client_id) {
         client.send_message(data).await?;
         Ok(())
     } else {
-        Err(format!("TCP client {} not found", params.client_id))
+        Err(format!("TCP client {} not found", send_params.client_id))
     }
 }
 

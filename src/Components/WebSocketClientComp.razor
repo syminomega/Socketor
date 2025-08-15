@@ -6,9 +6,11 @@
 @using Socketor.DataModel.Configs
 @using Microsoft.AspNetCore.Components.Sections
 @using Socketor.DataModel
+@using Size = BootstrapBlazor.Components.Size
 @inject IStringLocalizer<WebSocketClientComp> Localizer
 @inject ILocalStorageService LocalStorage
 @inject ToastService ToastService
+@inject Tauri Tauri
 
 <div class="ws-client-main">
     <div class="ws-client-left">
@@ -41,13 +43,15 @@
         <Scroll style="position: absolute;">
             <div class="ws-client-right-container">
                 <Card HeaderText="@Localizer["ConnectionSettings"]" IsCollapsible="true">
+                    <HeaderTemplate>
+                        <Button Icon="fa-solid fa-rotate" Size="Size.ExtraSmall" Color="Color.Link"
+                                OnClick="@RefreshWebSocketState"></Button>
+                    </HeaderTemplate>
                     <BodyTemplate>
                         <div class="config-list">
                             <div>@Localizer["WebSocketState"]</div>
                             <BootstrapInputGroup>
                                 <Display TValue="string" Value="_connectionState"></Display>
-                                <Button Icon="fa-solid fa-rotate"
-                                        OnClick="@RefreshWebSocketState"></Button>
                             </BootstrapInputGroup>
                         </div>
                     </BodyTemplate>
@@ -84,16 +88,24 @@
         _isConnected ? BBColor.Danger : BBColor.Success;
 
     private MessageBox? _messageBox;
+    private bool _isTauri;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
         if (firstRender)
         {
+            _isTauri = await Tauri.Core.IsTauri();
             var storedConfig = await LocalStorage.GetItemAsync<WebSocketClientConfig?>("WebSocketClientConfig");
             if (storedConfig != null)
             {
                 Config = storedConfig;
+            }
+
+            if (_isTauri)
+            {
+                var tauriWindow = await Tauri.Window.GetCurrentWindow();
+                await tauriWindow.SetTitle("WebSocket Client");
             }
         }
     }

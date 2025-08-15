@@ -5,6 +5,7 @@
 @using Socketor.DataModel.Configs
 @using Microsoft.AspNetCore.Components.Sections
 @using Socketor.DataModel
+@using Size = BootstrapBlazor.Components.Size
 @inject IStringLocalizer<WebSocketServerComp> Localizer
 @inject ILocalStorageService LocalStorage
 @inject ILogger<WebSocketServerComp> Logger
@@ -50,20 +51,20 @@
         <Scroll style="position: absolute; width: 100%;">
             <div class="ws-server-right-container">
                 <Card HeaderText="@Localizer["ServerSettings"]" IsCollapsible="true">
+                    <HeaderTemplate>
+                        <Button Icon="fa-solid fa-rotate" Size="Size.ExtraSmall" Color="Color.Link"
+                                OnClick="@RefreshServerStatus"></Button>
+                    </HeaderTemplate>
                     <BodyTemplate>
                         <div class="config-list">
                             <div>@Localizer["ServerStatus"]</div>
                             <BootstrapInputGroup>
                                 <Display TValue="string" Value="_serverStatus"></Display>
-                                <Button Icon="fa-solid fa-rotate"
-                                        OnClick="@RefreshServerStatus"></Button>
                             </BootstrapInputGroup>
 
                             <div>@Localizer["ConnectedClients"]</div>
                             <BootstrapInputGroup>
                                 <Display TValue="string" Value="_clientCount.ToString()"></Display>
-                                <Button Icon="fa-solid fa-rotate"
-                                        OnClick="@RefreshServerStatus"></Button>
                             </BootstrapInputGroup>
 
                             <div>@Localizer["ServerId"]</div>
@@ -209,10 +210,10 @@
 
         try
         {
-            var startParams = new StartServerRequest
+            var startParams = new
             {
-                Host = Config.Host,
-                Port = Config.Port,
+                Config.Host,
+                Config.Port,
                 ServerId = _windowUniqueLabel
             };
 
@@ -316,13 +317,6 @@
     }
 
     // Tauri请求和响应的数据类
-    private class StartServerRequest
-    {
-        public string Host { get; set; } = "";
-        public int Port { get; set; }
-        public string? ServerId { get; set; }
-    }
-
     private class SendMessageRequest
     {
         public string ServerId { get; set; } = "";
