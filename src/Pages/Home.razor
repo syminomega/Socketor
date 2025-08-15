@@ -5,6 +5,7 @@
 @inject IThemeProvider ThemeProvider
 @inject Tauri Tauri
 @inject IStringLocalizer<Home> Localizer
+@inject ToastService ToastService
 @inject IJSRuntime JsRuntime
 
 <div data-tauri-drag-region class="drag-zone"></div>
@@ -44,6 +45,7 @@
         if (firstRender)
         {
             _isTauri = await Tauri.Core.IsTauri();
+            await ToastService.Information("Refreshing server status...");
         }
     }
 

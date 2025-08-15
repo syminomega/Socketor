@@ -392,7 +392,7 @@
         _messageBox?.AddMessage(messageData);
 
         // 如果是客户端连接/断开事件，刷新客户端计数
-        if (serverEvent.EventType == "client_connected" || serverEvent.EventType == "client_disconnected")
+        if (serverEvent.EventType is "client_connected" or "client_disconnected")
         {
             await RefreshServerStatus();
         }
