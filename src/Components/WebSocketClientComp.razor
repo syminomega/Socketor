@@ -76,7 +76,7 @@
     // ws client instance
     private ClientWebSocket _webSocket = new();
 
-    // 启动后按钮变成断开按钮
+    // change the button text and color based on connection state
     private string ConnectButtonText() =>
         _isConnected ? Localizer["Disconnect"] : Localizer["Connect"];
 
@@ -251,7 +251,6 @@
             }
             catch (Exception e)
             {
-                // 判断当前连接是否正常
                 if (_webSocket.State == WebSocketState.Open)
                 {
                     await ToastService.Error(Localizer["ReceiveError"], e.Message);

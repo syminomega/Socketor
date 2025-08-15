@@ -71,7 +71,8 @@
 
                             <div>@Localizer["MessageType"]</div>
                             <BootstrapInputGroup>
-                                <Select TValue="string" @bind-Value="_messageType" Items="@_messageTypeOptions"></Select>
+                                <Select TValue="string" @bind-Value="_messageType"
+                                        Items="@_messageTypeOptions"></Select>
                             </BootstrapInputGroup>
                         </div>
                     </BodyTemplate>
@@ -96,14 +97,12 @@
     private MessageBox? _messageBox;
     private string _messageType = "text";
 
-    // 消息类型选项
     private readonly List<SelectedItem> _messageTypeOptions =
     [
         new("text", "Text"),
         new("hex", "Hex")
     ];
 
-    // Tauri事件监听器
     private UnlistenFn? _unlistenServerMessage;
     private ITauriWindow? _tauriWindow;
 
@@ -114,7 +113,7 @@
 
     private BBColor ServerButtonColor() =>
         _isServerRunning ? BBColor.Danger : BBColor.Success;
-    
+
     private bool _isTauri;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -123,21 +122,27 @@
         if (firstRender)
         {
             _isTauri = await Tauri.Core.IsTauri();
-            // 加载存储的配置
+            // load saved configuration
             var storedConfig = await LocalStorage.GetItemAsync<TcpServerConfig?>("TcpServerConfig");
             if (storedConfig != null)
             {
                 Config = storedConfig;
             }
 
-            // 监听来自Tauri后端的TCP事件
             if (_isTauri)
             {
                 _tauriWindow = await Tauri.Window.GetCurrentWindow();
                 _windowUniqueLabel = await _tauriWindow.Label;
-                await _tauriWindow.SetTitle("TCP Server - " + _windowUniqueLabel);
+                await _tauriWindow.SetTitle("TCP Server");
                 _unlistenServerMessage = await _tauriWindow.Listen<TcpServerEvent>("tcp-server-event", OnServerEventReceived);
-                await _tauriWindow.Once(TauriEventName.WindowCloseRequested, async () => await DisposeAsync());
+                // stop the server when the window is closed
+                await _tauriWindow.Once(TauriEventName.WindowCloseRequested, async () =>
+                {
+                    await DisposeAsync();
+                    await _tauriWindow.Destroy();
+                });
+                // refresh server status on first load
+                await RefreshServerStatus();
             }
             else
             {
@@ -156,6 +161,7 @@
             _isServerRunning = false;
             _clientCount = 0;
         }
+
         if (string.IsNullOrWhiteSpace(_windowUniqueLabel))
         {
             await ToastService.Error("Server ID is not set.");
@@ -177,7 +183,6 @@
 
             await SaveConfig();
             Logger.LogError("Get TCP server status error: {Message}", e.Message);
-            await ToastService.Warning("Server not found", "Server status cleared");
         }
 
         StateHasChanged();
@@ -190,7 +195,7 @@
             await ToastService.Warning(Localizer["TauriNotAvailable"]);
             return;
         }
-        
+
         await SaveConfig();
 
         if (_isServerRunning)
@@ -212,6 +217,7 @@
             await ToastService.Error("Server ID is not set.");
             return;
         }
+
         try
         {
             var startParams = new StartTcpServerRequest
@@ -223,7 +229,6 @@
 
             await Tauri.Core.Invoke<string>("start_tcp_server", new { startParams });
 
-            // 保存配置，确保ServerId被持久化
             await SaveConfig();
 
             var startMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes($"{Localizer["ServerStarted"]} - ID: {_windowUniqueLabel}"));
@@ -233,7 +238,6 @@
         }
         catch (Exception e)
         {
-            // 发生错误时不修改当前 Server 状态信息，等待重新获取
             Logger.LogError("Start TCP server error: {Message}", e.Message);
             await ToastService.Error(Localizer["StartServerFailed"], e.Message);
         }
@@ -255,11 +259,9 @@
             _messageBox?.AddMessage(stopMessage);
 
             await ToastService.Success(Localizer["ServerStopped"]);
-            
         }
         catch (Exception e)
         {
-            // 发生错误时不修改当前 Server 状态信息，等待重新获取
             Logger.LogError("Stop TCP server error: {Message}", e.Message);
             await ToastService.Error(Localizer["StopServerFailed"], e.Message);
         }
@@ -279,7 +281,8 @@
             {
                 ServerId = _windowUniqueLabel,
                 Message = Encoding.UTF8.GetString(messageData.RawMessage),
-                TargetClientId = null, // 广播给所有客户端，可以扩展为支持指定客户端
+                // Default null for broadcast, or specify a client ID to send to a specific client
+                TargetClientId = null,
                 MessageType = _messageType
             };
 
@@ -306,15 +309,21 @@
 
     public async ValueTask DisposeAsync()
     {
-        // 清理事件监听器
         if (_unlistenServerMessage != null)
         {
             await _unlistenServerMessage.Invoke();
             _unlistenServerMessage = null;
         }
-        // 停止服务器
-        await StopServer();
-        // 保存配置
+
+        if (_isTauri)
+        {
+            await RefreshServerStatus();
+            if (_isServerRunning)
+            {
+                await StopServer();
+            }
+        }
+
         await SaveConfig();
     }
 
@@ -356,8 +365,11 @@
     private async Task OnServerEventReceived(TcpServerEvent serverEvent)
     {
         // 只处理当前服务器的事件
+        // TODO: 后端根据label发送消息到指定窗口
         if (serverEvent.ServerId != _windowUniqueLabel)
+        {
             return;
+        }
 
         // 根据事件类型处理不同的事件
         var messageOwner = serverEvent.EventType switch
@@ -382,9 +394,10 @@
         // 如果是客户端连接/断开事件，刷新客户端计数
         if (serverEvent.EventType == "client_connected" || serverEvent.EventType == "client_disconnected")
         {
-           await RefreshServerStatus();
+            await RefreshServerStatus();
         }
 
         StateHasChanged();
     }
+
 }

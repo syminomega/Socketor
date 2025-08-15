@@ -14,6 +14,7 @@
     </CascadingValue>
 </div>
 
+@* Use this component to display settings panel. *@
 <SectionContent SectionName="@ConfigSectionName">
     <Card HeaderText="@Localizer["ReceiveSettings"]" IsCollapsible="true">
         <BodyTemplate>
@@ -22,7 +23,6 @@
                     <BootstrapInputGroupLabel DisplayText="@Localizer["MaxEntries"]"/>
                     <BootstrapInputNumber Min="1" TValue="int" @bind-Value="MessageBoxConfig.MaxEntries"/>
                 </BootstrapInputGroup>
-                @* TODO: 内容显示设置 *@
                 <Checkbox TValue="bool" IsDisabled="true" DisplayText="Show As Hex" ShowAfterLabel="true"/>
                 <Checkbox TValue="bool" @bind-Value="MessageBoxConfig.AutoWarp" DisplayText="@Localizer["AutoWarp"]"
                           ShowAfterLabel="true"/>

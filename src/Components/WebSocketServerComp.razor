@@ -93,7 +93,6 @@
     private int _clientCount;
     private MessageBox? _messageBox;
 
-    // Tauri事件监听器
     private UnlistenFn? _unlistenServerMessage;
     private ITauriWindow? _tauriWindow;
 
@@ -113,21 +112,26 @@
         if (firstRender)
         {
             _isTauri = await Tauri.Core.IsTauri();
-            // 加载存储的配置
+            // load saved configuration
             var storedConfig = await LocalStorage.GetItemAsync<WebSocketServerConfig?>("WebSocketServerConfig");
             if (storedConfig != null)
             {
                 Config = storedConfig;
             }
 
-            // 监听来自Tauri后端的WebSocket事件
             if (_isTauri)
             {
                 _tauriWindow = await Tauri.Window.GetCurrentWindow();
                 _windowUniqueLabel = await _tauriWindow.Label;
-                await _tauriWindow.SetTitle("WebSocket Server - " + _windowUniqueLabel);
+                await _tauriWindow.SetTitle("WebSocket Server");
                 _unlistenServerMessage = await _tauriWindow.Listen<WebSocketServerEvent>("websocket-server-event", OnServerEventReceived);
-                await _tauriWindow.Once(TauriEventName.WindowCloseRequested, async () => await DisposeAsync());
+                await _tauriWindow.Once(TauriEventName.WindowCloseRequested, async () =>
+                {
+                    await DisposeAsync();
+                    await _tauriWindow.Destroy();
+                });
+                // refresh server status on first load
+                await RefreshServerStatus();
             }
             else
             {
@@ -168,7 +172,6 @@
 
             await SaveConfig();
             Logger.LogError("Get websocket server status error: {Message}", e.Message);
-            await ToastService.Warning("Server not found", "Server status cleared");
         }
 
         StateHasChanged();
@@ -215,7 +218,6 @@
 
             await Tauri.Core.Invoke<string>("start_websocket_server", new { startParams });
 
-            // 保存配置，确保ServerId被持久化
             await SaveConfig();
 
             var startMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes($"{Localizer["ServerStarted"]} - ID: {_windowUniqueLabel}"));
@@ -225,7 +227,6 @@
         }
         catch (Exception e)
         {
-            // 发生错误时不修改当前 Server 状态信息，等待重新获取
             Logger.LogError("Start websocket server error: {Message}", e.Message);
             await ToastService.Error(Localizer["StartServerFailed"], e.Message);
         }
@@ -250,7 +251,6 @@
         }
         catch (Exception e)
         {
-            // 发生错误时不修改当前 Server 状态信息，等待重新获取
             Logger.LogError("Stop websocket server error: {Message}", e.Message);
             await ToastService.Error(Localizer["StopServerFailed"], e.Message);
         }
@@ -270,14 +270,15 @@
             {
                 ServerId = _windowUniqueLabel,
                 Message = Encoding.UTF8.GetString(messageData.RawMessage),
-                TargetClientId = null // 广播给所有客户端，可以扩展为支持指定客户端
+                // Default null for broadcast, or specify a client ID to send to a specific client
+                TargetClientId = null
             };
 
             var result = await Tauri.Core.Invoke<string>("send_websocket_message", new { sendParams });
 
             _messageBox?.AddMessage(messageData);
 
-            // 显示发送结果
+            // show sent message in the message box
             var resultMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes(result));
             _messageBox?.AddMessage(resultMessage);
         }
@@ -296,15 +297,21 @@
 
     public async ValueTask DisposeAsync()
     {
-        // 清理Tauri事件监听器
         if (_unlistenServerMessage != null)
         {
             await _unlistenServerMessage.Invoke();
             _unlistenServerMessage = null;
         }
 
-        await StopServer();
-        // 保存配置
+        if (_isTauri)
+        {
+            await RefreshServerStatus();
+            if (_isServerRunning)
+            {
+                await StopServer();
+            }
+        }
+
         await SaveConfig();
     }
 
@@ -342,11 +349,14 @@
         public string Timestamp { get; set; } = "";
     }
 
-    private Task OnServerEventReceived(WebSocketServerEvent serverEvent)
+    private async Task OnServerEventReceived(WebSocketServerEvent serverEvent)
     {
         // 只处理当前服务器的事件
+        // TODO: 后端根据label发送消息到指定窗口
         if (serverEvent.ServerId != _windowUniqueLabel)
-            return Task.CompletedTask;
+        {
+            return;
+        }
 
         // 根据事件类型处理不同的事件
         var messageOwner = serverEvent.EventType switch
@@ -371,13 +381,12 @@
         _messageBox?.AddMessage(messageData);
 
         // 如果是客户端连接/断开事件，刷新客户端计数
-        if (serverEvent.EventType == "client_connected" || serverEvent.EventType == "client_disconnected")
+        if (serverEvent.EventType is "client_connected" or "client_disconnected")
         {
-            InvokeAsync(RefreshServerStatus);
+            await RefreshServerStatus();
         }
 
-        InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
+        StateHasChanged();
     }
 
 }
