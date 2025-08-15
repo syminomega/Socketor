@@ -91,11 +91,15 @@
     "ConnectionSettings": "连接设置",
     "ConnectionState": "连接状态",
     "ClientId": "客户端ID",
+    "TcpClientConnected": "TCP 客户端已连接",
+    "TcpClientDisconnected": "TCP 客户端已断开",
     "ConnectionFailed": "TCP 连接失败",
     "DisconnectionFailed": "TCP 断开失败",
+    "ClientNotConnected": "TCP 客户端未连接",
     "SendFailed": "消息发送失败",
     "GetStateFailed": "获取连接状态失败",
     "Error": "错误",
-    "EventHandlingError": "事件处理错误"
+    "EventHandlingError": "事件处理错误",
+    "TauriNotAvailable": "未能获取 Tauri API"
   }
 }

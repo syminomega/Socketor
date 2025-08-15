@@ -1,5 +1,3 @@
-using Socketor.DataModel.Configs;
-
 namespace Socketor.DataModel.Configs;
 
 public class WebSocketServerConfig

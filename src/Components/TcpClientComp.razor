@@ -11,6 +11,7 @@
 
 @inject ILogger<TcpClientComp> Logger
 @inject Tauri Tauri
+@implements IAsyncDisposable
 
 <div class="tcp-client-main">
     <div class="tcp-client-left">
@@ -49,10 +50,10 @@
                             <BootstrapInputGroup>
                                 <Display TValue="string" Value="_connectionState"></Display>
                                 <Button Icon="fa-solid fa-rotate"
-                                        OnClick="@RefreshConnectionState"></Button>
+                                        OnClick="@RefreshClientStatus"></Button>
                             </BootstrapInputGroup>
                             <div>@Localizer["ClientId"]</div>
-                            <Display TValue="string" Value="@_currentClientId"></Display>
+                            <Display TValue="string" Value="@_windowUniqueLabel"></Display>
                         </div>
                     </BodyTemplate>
                 </Card>
@@ -70,9 +71,11 @@
     private TcpClientConfig Config { get; set; } = new();
 
     private UnlistenFn? _unlistenClientMessage;
+    private ITauriWindow? _tauriWindow;
 
     private string _connectionState = "Disconnected";
-    private string _currentClientId = "";
+
+    private string _windowUniqueLabel = "";
     private bool _isConnected;
 
     private string ConnectButtonText() =>
@@ -99,8 +102,18 @@
 
             if (_isTauri)
             {
-                // 注册事件监听器
+                _tauriWindow = await Tauri.Window.GetCurrentWindow();
+                _windowUniqueLabel = await _tauriWindow.Label;
+                await _tauriWindow.SetTitle("TCP Client");
                 _unlistenClientMessage = await Tauri.Event.Listen<TcpClientEventData>("tcp-client-event", OnTcpClientEventReceived);
+                // stop the client when the window is closed
+                await _tauriWindow.Once(TauriEventName.WindowCloseRequested, async () =>
+                {
+                    await DisposeAsync();
+                    await _tauriWindow.Destroy();
+                });
+                // refresh client status on first load
+                await RefreshClientStatus();
             }
             else
             {
@@ -112,31 +125,49 @@
     }
 
 
-    private void RefreshConnectionState()
+    private async Task RefreshClientStatus()
     {
-        // 从后端获取当前连接状态
-        InvokeAsync(async () =>
+        if (!_isTauri)
         {
-            if (!string.IsNullOrEmpty(_currentClientId))
-            {
-                try
-                {
-                    var clientInfo = await Tauri.Core.Invoke<TcpClientInfoData>("get_tcp_client_info", new { clientId = _currentClientId });
-                    
-                    _connectionState = clientInfo.State;
-                    _isConnected = clientInfo.State == "Connected";
-                    StateHasChanged();
-                }
-                catch (Exception ex)
-                {
-                    await ToastService.Error(Localizer["GetStateFailed"], ex.Message);
-                }
-            }
-        });
+            _connectionState = "Disabled";
+            _isConnected = false;
+        }
+
+        if (string.IsNullOrWhiteSpace(_windowUniqueLabel))
+        {
+            await ToastService.Error("Client ID is not set.");
+            return;
+        }
+
+        try
+        {
+            var clientInfo = await Tauri.Core.Invoke<TcpClientInfoData>("get_tcp_client_info", new { clientId = _windowUniqueLabel });
+
+            _connectionState = clientInfo.State;
+            _isConnected = clientInfo.State == "Connected";
+        }
+        catch (Exception e)
+        {
+            _connectionState = "Disabled";
+            _isConnected = false;
+
+            await SaveConfig();
+            Logger.LogError("Get TCP client status error: {Message}", e.Message);
+        }
+
+        StateHasChanged();
     }
 
     private async Task ChangeConnectStateClick()
     {
+        if (!_isTauri)
+        {
+            await ToastService.Warning(Localizer["TauriNotAvailable"]);
+            return;
+        }
+
+        await SaveConfig();
+
         if (_isConnected)
         {
             await DisconnectAsync();
@@ -145,59 +176,70 @@
         {
             await ConnectAsync();
         }
+
+        await RefreshClientStatus();
     }
 
     private async Task ConnectAsync()
     {
+        if (string.IsNullOrWhiteSpace(_windowUniqueLabel))
+        {
+            await ToastService.Error("Client ID is not set.");
+            return;
+        }
+
         try
         {
-            // 保存配置
-            await LocalStorage.SetItemAsync("TcpClientConfig", Config);
-
             var connectParams = new
             {
                 host = Config.Host,
                 port = Config.Port,
-                clientId = !string.IsNullOrEmpty(Config.ClientId) ? Config.ClientId : null
+                clientId = _windowUniqueLabel,
             };
 
-            _currentClientId = await Tauri.Core.Invoke<string>("connect_tcp_client", connectParams);
+            await Tauri.Core.Invoke<string>("connect_tcp_client", connectParams);
 
-            Config.ClientId = _currentClientId;
-            _connectionState = "Connecting";
-            StateHasChanged();
+            await SaveConfig();
+
+            var connectMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes($"{Localizer["TcpClientConnected"]} - ID: {_windowUniqueLabel}"));
+            _messageBox?.AddMessage(connectMessage);
+
+            await ToastService.Success(Localizer["TcpClientConnected"], $"Server ID: {_windowUniqueLabel}");
         }
         catch (Exception e)
         {
-            _isConnected = false;
-            _connectionState = "Error";
+            Logger.LogError("Start TCP client error: {Message}", e.Message);
             await ToastService.Error(Localizer["ConnectionFailed"], e.Message);
         }
     }
 
     private async Task DisconnectAsync()
     {
+        if (!_isConnected)
+        {
+            await ToastService.Warning(Localizer["ClientNotConnected"]);
+            return;
+        }
+
         try
         {
-            if (!string.IsNullOrEmpty(_currentClientId))
-            {
-                await Tauri.Core.Invoke("disconnect_tcp_client", new { clientId = _currentClientId });
-            }
+            await Tauri.Core.Invoke("disconnect_tcp_client", new { clientId = _windowUniqueLabel });
 
-            _isConnected = false;
-            _connectionState = "Disconnected";
-            _currentClientId = "";
-            StateHasChanged();
+            var disconnectMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes(Localizer["TcpClientDisconnected"]));
+            _messageBox?.AddMessage(disconnectMessage);
+
+            await ToastService.Success(Localizer["TcpClientDisconnected"]);
         }
         catch (Exception e)
         {
+            Logger.LogError("Stop TCP client error: {Message}", e.Message);
             await ToastService.Error(Localizer["DisconnectionFailed"], e.Message);
         }
     }
 
     private async Task OnMessageSend(MessageData messageData)
     {
-        if (!_isConnected || string.IsNullOrEmpty(_currentClientId))
+        if (!_isConnected || string.IsNullOrEmpty(_windowUniqueLabel))
         {
             await ToastService.Warning(Localizer["SendFailed"], "Not connected to server");
             return;
@@ -211,7 +253,7 @@
 
             var sendParams = new
             {
-                clientId = _currentClientId,
+                clientId = _windowUniqueLabel,
                 message = message,
                 messageType = messageType
             };
@@ -224,6 +266,32 @@
             _messageBox?.AddMessage(new MessageData(MessageOwner.Error, Encoding.UTF8.GetBytes(errorMessage)));
             await ToastService.Error(Localizer["SendFailed"], e.Message);
         }
+    }
+
+    private async Task SaveConfig()
+    {
+        await LocalStorage.SetItemAsync("TcpClientConfig", Config);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // if (_tauriWindow != null) await _tauriWindow.DisposeAsync();
+        if (_unlistenClientMessage != null)
+        {
+            await _unlistenClientMessage.Invoke();
+            _unlistenClientMessage = null;
+        }
+
+        if (_isTauri)
+        {
+            await RefreshClientStatus();
+            if (_isConnected)
+            {
+                await DisconnectAsync();
+            }
+        }
+
+        await SaveConfig();
     }
 
     // 数据传输对象
@@ -246,7 +314,7 @@
     private async Task OnTcpClientEventReceived(TcpClientEventData eventData)
     {
         // 只处理当前客户端的事件
-        if (eventData.ClientId != _currentClientId)
+        if (eventData.ClientId != _windowUniqueLabel)
             return;
 
         // 根据事件类型处理不同的事件
@@ -280,5 +348,6 @@
 
         StateHasChanged();
     }
+
 
 }

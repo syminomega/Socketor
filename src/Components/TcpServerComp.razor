@@ -245,7 +245,7 @@
 
     private async Task StopServer()
     {
-        if (string.IsNullOrEmpty(_windowUniqueLabel))
+        if (!_isServerRunning)
         {
             await ToastService.Warning(Localizer["ServerNotRunning"]);
             return;

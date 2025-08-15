@@ -91,11 +91,15 @@
     "ConnectionSettings": "Connection Settings",
     "ConnectionState": "Connection State",
     "ClientId": "Client ID",
+    "TcpClientConnected": "TCP Client Connected",
+    "TcpClientDisconnected": "TCP Client Disconnected",
     "ConnectionFailed": "TCP Connection Failed",
     "DisconnectionFailed": "TCP Disconnection Failed",
+    "ClientNotConnected": "TCP Client Not Connected",
     "SendFailed": "Message Sending Failed",
     "GetStateFailed": "Failed to Get Connection State",
     "Error": "Error",
-    "EventHandlingError": "Event Handling Error"
+    "EventHandlingError": "Event Handling Error",
+    "TauriNotAvailable": "Tauri API Not Available"
   }
 }

@@ -234,9 +234,9 @@
 
     private async Task StopServer()
     {
-        if (string.IsNullOrEmpty(_windowUniqueLabel))
+        if (!_isServerRunning)
         {
-            await ToastService.Error("Server ID is not set.");
+            await ToastService.Warning(Localizer["ServerNotRunning"]);
             return;
         }
 
