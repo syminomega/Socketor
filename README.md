@@ -5,7 +5,7 @@
 </div>
 
 # Socketor
-一个简单的网络调试工具，当前支持 WebSocket 客户端与服务器，更多功能开发中。 \
+一个简单的网络调试工具，支持 WebSocket、TCP 和 UDP，更多功能开发中。 \
  Simple tool for WebSocket, TCP/UDP testing.
 
  >这曾经是一个非常奇葩的项目，但现在好好休整了一下，接下来会持续优化。
@@ -30,9 +30,9 @@ Run `cargo tauri build` under the main directory to pack the executable file.
 |------------------|-------------|
 | WebSocket Client | Finished    |
 | WebSocket Server | Finished    |
-| TCP Client       | In Progress |
+| TCP Client       | Finished    |
 | TCP Server       | Finished    |
-| UDP Client       | Plan        |
+| UDP Client       | Finished    |
 | gRPC Client      | Plan        |
 | SignalR Client   | Plan        |
 

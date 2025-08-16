@@ -1,0 +1,387 @@
+@using System.Text
+@using Blazored.LocalStorage
+@using Microsoft.Extensions.Localization
+@using Socketor.Components.Widgets
+@using Socketor.DataModel.Configs
+@using Microsoft.AspNetCore.Components.Sections
+@using Socketor.DataModel
+@using Size = BootstrapBlazor.Components.Size
+@inject IStringLocalizer<UdpClientComp> Localizer
+@inject ILocalStorageService LocalStorage
+@inject ToastService ToastService
+
+@inject ILogger<UdpClientComp> Logger
+@inject Tauri Tauri
+@implements IAsyncDisposable
+
+<div class="udp-client-main">
+    <div class="udp-client-left">
+        <Split IsVertical="true" Basis="65%" FirstPaneMinimumSize="200px" SecondPaneMinimumSize="80px">
+            <FirstPaneTemplate>
+                <div class="udp-client-left-top">
+                    <BootstrapInputGroup>
+                        <BootstrapInputGroupLabel DisplayText="@Localizer["LocalPort"]"/>
+                        <BootstrapInput TValue="int?" @bind-Value="Config.LocalPort" Disabled="_isStarted"
+                                        placeholder="@Localizer["AutoAssign"]"/>
+                        <Button Text="@StartButtonText()" Color="StartButtonColor()"
+                                OnClick="@ChangeStartStateClick" IsAsync="true"></Button>
+                    </BootstrapInputGroup>
+                    <BootstrapInputGroup>
+                        <BootstrapInputGroupLabel DisplayText="@Localizer["TargetHost"]"/>
+                        <BootstrapInput TValue="string" @bind-Value="Config.TargetHost"/>
+                        <BootstrapInputGroupLabel DisplayText="@Localizer["TargetPort"]"/>
+                        <BootstrapInput TValue="int" @bind-Value="Config.TargetPort"/>
+                    </BootstrapInputGroup>
+                    <MessageBox @ref="_messageBox" ConfigSectionName="@UdpClientMsgBoxConfigSectionName"
+                                MessageBoxConfig="Config.MessageBoxConfig"/>
+                </div>
+            </FirstPaneTemplate>
+            <SecondPaneTemplate>
+                <div class="udp-client-left-bottom">
+                    <SendBox ConfigSectionName="@UdpClientSendBoxConfigSectionName"
+                             SendBoxConfig="Config.SendBoxConfig" Enabled="_isStarted"
+                             OnMessageSend="OnMessageSend"/>
+                </div>
+            </SecondPaneTemplate>
+        </Split>
+    </div>
+
+    <div style="grid-column: 2; position: relative; width: calc(100% + 4px)">
+        <Scroll style="position: absolute; width: 100%;">
+            <div class="udp-client-right-container">
+                <Card HeaderText="@Localizer["ClientSettings"]" IsCollapsible="true">
+                    <HeaderTemplate>
+                        <Button Icon="fa-solid fa-rotate" Size="Size.ExtraSmall" Color="Color.Link"
+                                OnClick="@RefreshClientStatus"></Button>
+                    </HeaderTemplate>
+                    <BodyTemplate>
+                        <div class="config-list">
+                            <div>@Localizer["ClientState"]</div>
+                            <BootstrapInputGroup>
+                                <Display TValue="string" Value="_clientState"></Display>
+                            </BootstrapInputGroup>
+                            <div>@Localizer["LocalPort"]</div>
+                            <BootstrapInputGroup>
+                                <Display TValue="string" Value="@_actualPort"></Display>
+                            </BootstrapInputGroup>
+                            <div>@Localizer["ClientId"]</div>
+                            <Display TValue="string" Value="@_windowUniqueLabel"></Display>
+                        </div>
+                    </BodyTemplate>
+                </Card>
+                <SectionOutlet SectionName="@UdpClientMsgBoxConfigSectionName"/>
+                <SectionOutlet SectionName="@UdpClientSendBoxConfigSectionName"/>
+            </div>
+        </Scroll>
+    </div>
+</div>
+
+@code {
+    private const string UdpClientMsgBoxConfigSectionName = "UdpClientMsgBoxConfig";
+    private const string UdpClientSendBoxConfigSectionName = "UdpClientSendBoxConfig";
+
+    private UdpClientConfig Config { get; set; } = new();
+
+    private UnlistenFn? _unlistenClientMessage;
+    private ITauriWindow? _tauriWindow;
+
+    private string _clientState = "";
+    private string _actualPort = "N/A";
+
+    private string _windowUniqueLabel = "";
+    private bool _isStarted;
+
+    private string StartButtonText() =>
+        _isStarted ? Localizer["Stop"] : Localizer["Start"];
+
+    private BBColor StartButtonColor() =>
+        _isStarted ? BBColor.Danger : BBColor.Success;
+
+    private MessageBox? _messageBox;
+
+    private bool _isTauri;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            // 初始化本地化状态文本
+            if (string.IsNullOrEmpty(_clientState))
+            {
+                _clientState = Localizer["Stopped"];
+            }
+            
+            _isTauri = await Tauri.Core.IsTauri();
+            var storedConfig = await LocalStorage.GetItemAsync<UdpClientConfig?>("UdpClientConfig");
+            if (storedConfig != null)
+            {
+                Config = storedConfig;
+            }
+
+            if (_isTauri)
+            {
+                _tauriWindow = await Tauri.Window.GetCurrentWindow();
+                _windowUniqueLabel = await _tauriWindow.Label;
+                await _tauriWindow.SetTitle("UDP Client");
+                _unlistenClientMessage = await _tauriWindow.Listen<UdpClientEventData>("udp-client-event", OnUdpClientEventReceived);
+                // stop the client when the window is closed
+                await _tauriWindow.Once(TauriEventName.WindowCloseRequested, async () =>
+                {
+                    await DisposeAsync();
+                    await _tauriWindow.Destroy();
+                });
+                // refresh client status on first load
+                await RefreshClientStatus();
+            }
+            else
+            {
+                Logger.LogWarning("Tauri is not available, UDP client events will not be received.");
+            }
+
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task RefreshClientStatus()
+    {
+        if (!_isTauri)
+        {
+            _clientState = Localizer["Disabled"];
+            _isStarted = false;
+            _actualPort = "N/A";
+        }
+
+        if (string.IsNullOrWhiteSpace(_windowUniqueLabel))
+        {
+            await ToastService.Error("Client ID is not set.");
+            return;
+        }
+
+        try
+        {
+            var clientInfo = await Tauri.Core.Invoke<UdpClientInfoData>("get_udp_client_info", new { clientId = _windowUniqueLabel });
+
+            _clientState = clientInfo.State;
+            _isStarted = clientInfo.State == "Connected";
+            _actualPort = clientInfo.LocalPort > 0 ? clientInfo.LocalPort.ToString() : "N/A";
+        }
+        catch (Exception e)
+        {
+            _clientState = Localizer["Disabled"];
+            _isStarted = false;
+            _actualPort = "N/A";
+
+            await SaveConfig();
+            Logger.LogError("Get UDP client status error: {Message}", e.Message);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task ChangeStartStateClick()
+    {
+        if (!_isTauri)
+        {
+            await ToastService.Warning(Localizer["TauriNotAvailable"]);
+            return;
+        }
+
+        await SaveConfig();
+
+        if (_isStarted)
+        {
+            await StopAsync();
+        }
+        else
+        {
+            await StartAsync();
+        }
+
+        await RefreshClientStatus();
+    }
+
+    private async Task StartAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_windowUniqueLabel))
+        {
+            await ToastService.Error("Client ID is not set.");
+            return;
+        }
+
+        try
+        {
+            var startParams = new
+            {
+                LocalPort = Config.LocalPort,
+                ClientId = _windowUniqueLabel,
+            };
+
+            await Tauri.Core.Invoke<string>("start_udp_client", new { startParams });
+
+            await SaveConfig();
+
+            var startMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes($"{Localizer["UdpClientStarted"]} - ID: {_windowUniqueLabel}"));
+            _messageBox?.AddMessage(startMessage);
+
+            await ToastService.Success(Localizer["UdpClientStarted"], $"Client ID: {_windowUniqueLabel}");
+        }
+        catch (Exception e)
+        {
+            Logger.LogError("Start UDP client error: {Message}", e.Message);
+            await ToastService.Error(Localizer["StartFailed"], e.Message);
+        }
+    }
+
+    private async Task StopAsync()
+    {
+        if (!_isStarted)
+        {
+            await ToastService.Warning(Localizer["ClientNotStarted"]);
+            return;
+        }
+
+        try
+        {
+            await Tauri.Core.Invoke("stop_udp_client", new { clientId = _windowUniqueLabel });
+
+            var stopMessage = new MessageData(MessageOwner.Info, Encoding.UTF8.GetBytes(Localizer["UdpClientStopped"]));
+            _messageBox?.AddMessage(stopMessage);
+
+            await ToastService.Success(Localizer["UdpClientStopped"]);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError("Stop UDP client error: {Message}", e.Message);
+            await ToastService.Error(Localizer["StopFailed"], e.Message);
+        }
+    }
+
+    private async Task OnMessageSend(MessageData messageData)
+    {
+        if (!_isStarted || string.IsNullOrEmpty(_windowUniqueLabel))
+        {
+            await ToastService.Warning(Localizer["SendFailed"], "Client not started");
+            return;
+        }
+
+        _messageBox?.AddMessage(messageData);
+        try
+        {
+            var message = Encoding.UTF8.GetString(messageData.RawMessage);
+            var messageType = messageData.MessageType == MessageType.Text ? "text" : "hex";
+
+            var sendParams = new SendUdpMessageRequest
+            {
+                ClientId = _windowUniqueLabel,
+                TargetHost = Config.TargetHost,
+                TargetPort = Config.TargetPort,
+                Message = message,
+                MessageType = messageType
+            };
+
+            await Tauri.Core.Invoke("send_udp_client_message", new { sendParams });
+        }
+        catch (Exception e)
+        {
+            var errorMessage = $"{Localizer["SendFailed"]}: {e.Message}";
+            _messageBox?.AddMessage(new MessageData(MessageOwner.Error, Encoding.UTF8.GetBytes(errorMessage)));
+            await ToastService.Error(Localizer["SendFailed"], e.Message);
+        }
+    }
+
+    private async Task SaveConfig()
+    {
+        await LocalStorage.SetItemAsync("UdpClientConfig", Config);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // if (_tauriWindow != null) await _tauriWindow.DisposeAsync();
+        if (_unlistenClientMessage != null)
+        {
+            await _unlistenClientMessage.Invoke();
+            _unlistenClientMessage = null;
+        }
+
+        if (_isTauri)
+        {
+            await RefreshClientStatus();
+            if (_isStarted)
+            {
+                await StopAsync();
+            }
+        }
+
+        await SaveConfig();
+    }
+
+    // 数据传输对象
+    private class SendUdpMessageRequest
+    {
+        public required string ClientId { get; set; }
+        public required string TargetHost { get; set; }
+        public required int TargetPort { get; set; }
+        public required string Message { get; set; }
+        public string MessageType { get; set; } = "text";
+    }
+    
+    private class UdpClientInfoData
+    {
+        public string ClientId { get; set; } = "";
+        public int LocalPort { get; set; }
+        public string State { get; set; } = "";
+    }
+    
+    private class UdpClientEventData
+    {
+        public string ClientId { get; set; } = "";
+        public string EventType { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string Timestamp { get; set; } = "";
+    }
+
+    private async Task OnUdpClientEventReceived(UdpClientEventData eventData)
+    {
+        // 只处理当前客户端的事件
+        // TODO: 后端根据label发送消息到指定窗口
+        if (eventData.ClientId != _windowUniqueLabel)
+        {
+            return;
+        }
+
+        // 根据事件类型处理不同的事件
+        var messageOwner = eventData.EventType switch
+        {
+            "connected" => MessageOwner.Info,
+            "disconnected" => MessageOwner.Info,
+            "message_received" => MessageOwner.Receive,
+            "error" => MessageOwner.Error,
+            _ => MessageOwner.Info
+        };
+
+        var messageData = new MessageData(messageOwner, Encoding.UTF8.GetBytes(eventData.Message));
+        _messageBox?.AddMessage(messageData);
+
+        // 更新连接状态
+        switch (eventData.EventType)
+        {
+            case "connected":
+                _isStarted = true;
+                _clientState = Localizer["Connected"];
+                break;
+            case "disconnected":
+                _isStarted = false;
+                _clientState = Localizer["Stopped"];
+                break;
+            case "error":
+                await ToastService.Error(Localizer["Error"], eventData.Message);
+                break;
+        }
+
+        StateHasChanged();
+    }
+
+
+}

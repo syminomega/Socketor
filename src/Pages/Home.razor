@@ -24,6 +24,7 @@
     <Button Text="@Localizer["WebSocketClient"]" OnClick="@OpenWebSocketClient"></Button>
     <Button Text="@Localizer["TcpServer"]" OnClick="@OpenTcpServer"></Button>
     <Button Text="@Localizer["TcpClient"]" OnClick="@OpenTcpClient"></Button>
+    <Button Text="@Localizer["UdpClient"]" OnClick="@OpenUdpClient"></Button>
 
 </div>
 
@@ -101,5 +102,10 @@
     private async Task OpenTcpClient()
     {
         await OpenNewWindow("/TcpClient");
+    }
+    
+    private async Task OpenUdpClient()
+    {
+        await OpenNewWindow("/UdpClient");
     }
 }

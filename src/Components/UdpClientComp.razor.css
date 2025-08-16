@@ -1,0 +1,39 @@
+.udp-client-main {
+    /*left and right*/
+    display: grid;
+    grid-template-columns: 1fr 16rem;
+    position: relative;
+    height: 100%;
+}
+
+/*left side*/
+.udp-client-left {
+    grid-column: 1;
+    padding-right: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.udp-client-left-top {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 8px;
+    height: 100%;
+}
+
+.udp-client-left-bottom {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    padding-top: 8px;
+    align-items: stretch;
+}
+
+/*right side*/
+.udp-client-right-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-right: 4px;
+}

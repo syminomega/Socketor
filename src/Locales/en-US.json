@@ -2,6 +2,7 @@
   "Socketor.Pages.Home": {
     "TcpServer": "TCP Server",
     "TcpClient": "TCP Client",
+    "UdpClient": "UDP Client",
     "WebSocketServer": "WebSocket Server",
     "WebSocketClient": "WebSocket Client"
   },
@@ -101,5 +102,29 @@
     "Error": "Error",
     "EventHandlingError": "Event Handling Error",
     "TauriNotAvailable": "Tauri API Not Available"
+  },
+  "Socketor.Components.UdpClientComp": {
+    "LocalPort": "Local Port",
+    "AutoAssign": "Auto Assign",
+    "TargetHost": "Target Host",
+    "TargetPort": "Target Port",
+    "Start": "Start",
+    "Stop": "Stop",
+    "ClientSettings": "Client Settings",
+    "ClientState": "Client State",
+    "ClientId": "Client ID",
+    "UdpClientStarted": "UDP Client Started",
+    "UdpClientStopped": "UDP Client Stopped",
+    "StartFailed": "UDP Start Failed",
+    "StopFailed": "UDP Stop Failed",
+    "ClientNotStarted": "UDP Client Not Started",
+    "SendFailed": "Message Sending Failed",
+    "GetStateFailed": "Failed to Get Client State",
+    "Error": "Error",
+    "EventHandlingError": "Event Handling Error",
+    "TauriNotAvailable": "Tauri API Not Available",
+    "Stopped": "Stopped",
+    "Connected": "Connected",
+    "Disabled": "Disabled"
   }
 }

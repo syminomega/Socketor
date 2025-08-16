@@ -1,6 +1,6 @@
 [package]
 name = "socketor"
-version = "0.5.0"
+version = "0.6.0"
 description = "Socket tools based on tauri and blazor"
 authors = ["Symin"]
 edition = "2021"

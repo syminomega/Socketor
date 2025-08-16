@@ -2,6 +2,7 @@
   "Socketor.Pages.Home": {
     "TcpServer": "TCP 服务器",
     "TcpClient": "TCP 客户端",
+    "UdpClient": "UDP 客户端",
     "WebSocketServer": "WebSocket 服务器",
     "WebSocketClient": "WebSocket 客户端"
   },
@@ -101,5 +102,29 @@
     "Error": "错误",
     "EventHandlingError": "事件处理错误",
     "TauriNotAvailable": "未能获取 Tauri API"
+  },
+  "Socketor.Components.UdpClientComp": {
+    "LocalPort": "本地端口",
+    "AutoAssign": "自动分配",
+    "TargetHost": "目标主机",
+    "TargetPort": "目标端口",
+    "Start": "启动",
+    "Stop": "停止",
+    "ClientSettings": "客户端设置",
+    "ClientState": "客户端状态",
+    "ClientId": "客户端ID",
+    "UdpClientStarted": "UDP 客户端已启动",
+    "UdpClientStopped": "UDP 客户端已停止",
+    "StartFailed": "UDP 启动失败",
+    "StopFailed": "UDP 停止失败",
+    "ClientNotStarted": "UDP 客户端未启动",
+    "SendFailed": "消息发送失败",
+    "GetStateFailed": "获取客户端状态失败",
+    "Error": "错误",
+    "EventHandlingError": "事件处理错误",
+    "TauriNotAvailable": "未能获取 Tauri API",
+    "Stopped": "已停止",
+    "Connected": "已连接",
+    "Disabled": "不可用"
   }
 }
