@@ -161,6 +161,7 @@
             _serverStatus = "Disabled";
             _isServerRunning = false;
             _clientCount = 0;
+            return;
         }
 
         if (string.IsNullOrWhiteSpace(_windowUniqueLabel))
@@ -175,12 +176,28 @@
             _serverStatus = serverInfo.IsRunning ? "Running" : "Stopped";
             _clientCount = serverInfo.ClientCount;
             _isServerRunning = serverInfo.IsRunning;
+            if (_tauriWindow != null)
+            {
+                if (_isServerRunning)
+                {
+                    await _tauriWindow.SetTitle("TCP Server - Running");
+                }
+                else
+                {
+                    await _tauriWindow.SetTitle("TCP Server");
+                }
+            }
         }
         catch (Exception e)
         {
             _serverStatus = "Stopped";
             _isServerRunning = false;
             _clientCount = 0;
+
+            if (_tauriWindow != null)
+            {
+                await _tauriWindow.SetTitle("TCP Server");
+            }
 
             await SaveConfig();
             Logger.LogError("Get TCP server status error: {Message}", e.Message);
